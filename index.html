@@ -9,7 +9,7 @@
   :root{
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
     --border:#242a31; --text:#d7dce2; --dim:#5c6670; --red:#e5484d; --blue:#58a6ff;
-    --green:#3fb950; --orange:#f0883e;
+    --green:#3fb950;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;}
   html,body{height:100%;}
@@ -24,14 +24,11 @@
   .share{display:flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border);}
   .dot{width:10px;height:10px;border-radius:50%;background:#5c6670;}
   .dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
-  #roomInput{width:110px;}
   .gh-section{display:flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border);flex-wrap:wrap;}
-  .gh-section input{width:130px;}
   .gh-btn{background:#2d333b !important;border:1px solid #444c56 !important;}
   .gh-btn:hover{background:#3a414a !important;}
   .gh-status{font-size:12px;color:var(--dim);}
   .gh-status.ok{color:var(--green);}
-  .gh-status.err{color:var(--red);}
   .ticker{flex:1;min-width:200px;margin-left:12px;height:34px;display:flex;align-items:center;justify-content:center;gap:8px;
           background:#12161b;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 14px;}
@@ -44,7 +41,7 @@
   .weekdays div{height:42px;display:flex;align-items:center;justify-content:center;font-size:14px;}
   .weekdays .sun{color:var(--red);} .weekdays .sat{color:var(--blue);}
 
-  .grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(150px,1fr);min-height:0;}
+  .grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(120px,1fr);min-height:0;}
   .cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--cell-bg);
         padding:8px 10px;cursor:pointer;position:relative;overflow:hidden;user-select:none;}
   .cell:nth-child(7n){border-right:none;}
@@ -85,9 +82,8 @@
   .close-row{margin-top:16px;text-align:right;}
   .close-row button{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;}
 
-  /* GitHub 설정 모달 */
   .gh-modal-box{width:500px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
-  .gh-modal-box h2{font-size:17px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .gh-modal-box h2{font-size:17px;margin-bottom:16px;}
   .gh-modal-box .field{margin-bottom:12px;}
   .gh-modal-box .field label{display:block;font-size:13px;color:var(--dim);margin-bottom:4px;}
   .gh-modal-box .field input{width:100%;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:9px 11px;font-size:13px;outline:none;}
@@ -99,7 +95,6 @@
   .gh-modal-box .btn-row button.primary{background:var(--green);border-color:var(--green);color:#fff;}
   .gh-modal-box .btn-row button.danger{background:var(--red);border-color:var(--red);color:#fff;}
 
-  /* 토스트 */
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232930;border:1px solid #444c56;
          color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.4);
          opacity:0;transition:opacity .3s;pointer-events:none;}
@@ -131,14 +126,12 @@
   <button id="todayBtn">오늘</button>
   <input type="date" id="dateJump" />
   <button id="jumpBtn">이동</button>
-  <span class="share">
-    <span id="shareStatus" class="dot"></span>
-    <input id="roomInput" placeholder="공유 방 코드" />
-    <button id="shareBtn">공유 시작</button>
+  <span class="share" title="실시간 공유 상태">
+    <span id="shareStatus" class="dot"></span><span class="lbl">실시간 공유</span>
   </span>
   <span class="gh-section">
     <span id="ghStatus" class="dot"></span>
-    <button id="ghSettingsBtn" class="gh-btn">⚙️ GitHub 연동</button>
+    <button id="ghSettingsBtn" class="gh-btn">⚙️ GitHub</button>
     <button id="ghBackupBtn" class="gh-btn">⬆️ 백업</button>
     <button id="ghRestoreBtn" class="gh-btn">⬇️ 복원</button>
     <span id="ghStatusMsg" class="gh-status"></span>
@@ -174,19 +167,16 @@
     <div class="field">
       <label>GitHub 사용자명 / 저장소명</label>
       <input type="text" id="ghRepo" placeholder="예: myname/calendar-memos" />
-      <div class="help">공개/비공개 저장소 모두 가능합니다. 먼저 GitHub에 빈 저장소를 하나 만들어 주세요.</div>
     </div>
     <div class="field">
       <label>저장 경로 (파일명)</label>
       <input type="text" id="ghPath" placeholder="예: memos.json" value="memos.json" />
-      <div class="help">메모가 저장될 파일 경로입니다. 같은 경로를 쓰는 기기끼리 데이터가 공유됩니다.</div>
     </div>
     <div class="field">
       <label>Personal Access Token (PAT)</label>
       <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
       <div class="help">
-        토큰 발급: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings → Developer settings → Personal access tokens</a><br>
-        생성 시 <b>repo</b> 권한만 체크하면 됩니다. 토큰은 브라우저에만 저장되며 외부로 전송되지 않습니다.
+        토큰 발급: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Developer settings → Tokens</a> (repo 권한만 체크)
       </div>
     </div>
     <div class="btn-row">
@@ -201,13 +191,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  /* =====================================================
+     ★ 실시간 공유 방 코드 - 이 값을 바꾸면 다른 그룹과 구분됩니다
+     ===================================================== */
+  const SHARE_ROOM = 'our-team-calendar';
+
   const $ = s => document.querySelector(s);
   const grid = $('#grid'), ticker = $('#ticker');
   const modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
         impChk = $('#impChk'), addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
         yearSel = $('#yearSel'), monthSel = $('#monthSel'), dateJump = $('#dateJump'),
-        roomInput = $('#roomInput'), shareBtn = $('#shareBtn'), shareStatus = $('#shareStatus'),
+        shareStatus = $('#shareStatus'),
         ghModal = $('#ghModal'), ghRepo = $('#ghRepo'), ghPath = $('#ghPath'), ghToken = $('#ghToken'),
         ghStatus = $('#ghStatus'), ghStatusMsg = $('#ghStatusMsg'),
         toast = $('#toast');
@@ -254,7 +249,7 @@
     return null;
   }
 
-  /* ---------- 저장/불러오기 ---------- */
+  /* ---------- 저장/불러오기 (실시간 저장) ---------- */
   let memos = {};
   if (localStorage.getItem('calMemos') === null) {
     const t = new Date(), yst = new Date(t.getTime() - 864e5);
@@ -277,7 +272,7 @@
     const ok = ghConfig.repo && ghConfig.token && ghConfig.path;
     ghStatus.className = 'dot' + (ok ? ' on' : '');
     ghStatusMsg.className = 'gh-status' + (ok ? ' ok' : '');
-    ghStatusMsg.textContent = ok ? `✓ ${ghConfig.repo}` : '미연결';
+    ghStatusMsg.textContent = ok ? `✓ ${ghConfig.repo}` : '';
   }
   function openGhSettings() {
     ghRepo.value = ghConfig.repo || '';
@@ -287,144 +282,82 @@
   }
   function closeGhSettings() { ghModal.classList.add('hidden'); }
   function saveGhSettings() {
-    ghConfig = {
-      repo: ghRepo.value.trim(),
-      path: ghPath.value.trim() || 'memos.json',
-      token: ghToken.value.trim()
-    };
+    ghConfig = { repo: ghRepo.value.trim(), path: ghPath.value.trim() || 'memos.json', token: ghToken.value.trim() };
     if (ghConfig.repo && ghConfig.token) {
       localStorage.setItem('ghConfig', JSON.stringify(ghConfig));
-      updateGhStatus();
-      closeGhSettings();
+      updateGhStatus(); closeGhSettings();
       showToast('GitHub 연동 설정이 저장되었습니다.', 'ok');
-    } else {
-      showToast('저장소명과 토큰을 모두 입력하세요.', 'err');
-    }
+    } else showToast('저장소명과 토을 모두 입력하세요.', 'err');
   }
   function disconnectGh() {
-    if (!confirm('GitHub 연동을 해제하시겠습니까? (토큰이 삭제됩니다)')) return;
+    if (!confirm('GitHub 연동을 해제하시겠습니까?')) return;
     ghConfig = {};
     localStorage.removeItem('ghConfig');
-    updateGhStatus();
-    closeGhSettings();
+    updateGhStatus(); closeGhSettings();
     showToast('GitHub 연동이 해제되었습니다.', 'ok');
   }
-
-  async function ghApi(method, path, body) {
+  async function ghApi(method, body) {
     if (!ghConfig.repo || !ghConfig.token) throw new Error('GitHub 설정이 필요합니다.');
     const url = `https://api.github.com/repos/${ghConfig.repo}/contents/${encodeURIComponent(ghConfig.path)}`;
-    const opts = {
-      method,
-      headers: {
-        'Authorization': 'Bearer ' + ghConfig.token,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    };
+    const opts = { method, headers: { 'Authorization': 'Bearer ' + ghConfig.token,
+      'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${res.status}`);
-    }
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
     return res.status === 204 ? null : res.json();
   }
-
   async function testGhConnection() {
     try {
-      const tmpCfg = {
-        repo: ghRepo.value.trim(),
-        path: ghPath.value.trim() || 'memos.json',
-        token: ghToken.value.trim()
-      };
-      const saved = ghConfig;
-      ghConfig = tmpCfg;
-      const res = await fetch(`https://api.github.com/repos/${ghConfig.repo}`, {
-        headers: { 'Authorization': 'Bearer ' + ghConfig.token, 'Accept': 'application/vnd.github+json' }
-      });
+      const res = await fetch(`https://api.github.com/repos/${ghRepo.value.trim()}`, {
+        headers: { 'Authorization': 'Bearer ' + ghToken.value.trim(), 'Accept': 'application/vnd.github+json' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const repo = await res.json();
-      showToast(`✓ ${repo.full_name} 저장소에 접근 성공!`, 'ok');
-    } catch (e) {
-      showToast('연결 실패: ' + e.message, 'err');
-    }
+      showToast(`✓ ${repo.full_name} 접근 성공!`, 'ok');
+    } catch (e) { showToast('연결 실패: ' + e.message, 'err'); }
   }
-
   async function backupToGh() {
-    if (!ghConfig.repo || !ghConfig.token) {
-      showToast('먼저 GitHub 연동 설정을 하세요.', 'err');
-      openGhSettings();
-      return;
-    }
+    if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
     try {
       showToast('GitHub에 백업 중...');
-      // 기존 파일의 sha 확인 (업데이트용)
       let sha = null;
-      try {
-        const existing = await ghApi('GET');
-        sha = existing.sha;
-      } catch (e) {
-        // 파일이 없으면 sha 없이 생성
-      }
+      try { sha = (await ghApi('GET')).sha; } catch (e) {}
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(memos, null, 2))));
-      const body = {
-        message: `메모 백업: ${new Date().toLocaleString('ko-KR')}`,
-        content,
-        ...(sha ? { sha } : {})
-      };
-      await ghApi('PUT', null, body);
-      showToast('✓ GitHub에 백업 완료!', 'ok');
-    } catch (e) {
-      showToast('백업 실패: ' + e.message, 'err');
-    }
+      await ghApi('PUT', { message: `메모 백업: ${new Date().toLocaleString('ko-KR')}`, content, ...(sha ? { sha } : {}) });
+      showToast('✓ GitHub 백업 완료!', 'ok');
+    } catch (e) { showToast('백업 실패: ' + e.message, 'err'); }
   }
-
   async function restoreFromGh() {
-    if (!ghConfig.repo || !ghConfig.token) {
-      showToast('먼저 GitHub 연동 설정을 하세요.', 'err');
-      openGhSettings();
-      return;
-    }
-    if (!confirm('GitHub에서 메모를 복원하면 현재 로컬 메모가 덮어써집니다. 진행하시겠습니까?')) return;
+    if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
+    if (!confirm('GitHub에서 복원하면 현재 로컬 메모가 덮어써집니다. 진행할까요?')) return;
     try {
       showToast('GitHub에서 복원 중...');
       const data = await ghApi('GET');
-      const jsonStr = decodeURIComponent(escape(atob(data.content)));
-      memos = JSON.parse(jsonStr) || {};
-      Object.keys(memos).forEach(k => {
-        memos[k] = memos[k].map(x => typeof x === 'string' ? { text: x, important: false } : x);
-      });
+      memos = JSON.parse(decodeURIComponent(escape(atob(data.content)))) || {};
+      Object.keys(memos).forEach(k => { memos[k] = memos[k].map(x => typeof x === 'string' ? { text: x, important: false } : x); });
       save(); render(); buildImportant();
-      showToast('✓ GitHub에서 복원 완료!', 'ok');
-    } catch (e) {
-      showToast('복원 실패: ' + e.message, 'err');
-    }
+      showToast('✓ GitHub 복원 완료!', 'ok');
+    } catch (e) { showToast('복원 실패: ' + e.message, 'err'); }
   }
 
-  /* ---------- 실시간 공유 (MQTT) ---------- */
+  /* ---------- 실시간 공유 (자동 연결) ---------- */
   const myId = Math.random().toString(36).slice(2, 10);
-  let client = null, room = null;
-
+  let client = null;
   function setStatus(on) {
     shareStatus.className = 'dot' + (on ? ' on' : '');
-    shareBtn.textContent = on ? '연결 해제' : '공유 시작';
+    shareStatus.title = on ? '실시간 공유 연결됨' : '연결 안 됨';
   }
   function publish(msg) {
     if (client && client.connected) {
       msg.sender = myId;
       if (msg.type === 'memos') msg.data = memos;
-      client.publish('calmemo/' + room, JSON.stringify(msg));
+      client.publish('calmemo/' + SHARE_ROOM, JSON.stringify(msg));
     }
   }
-  function connectRoom(code) {
-    code = (code || '').trim();
-    if (!code) { alert('공유 방 코드를 입력하세요.'); return; }
-    if (typeof mqtt === 'undefined') { alert('공유 라이브러리를 불러오지 못했습니다.'); return; }
-    room = code;
+  function connectShare() {
+    if (typeof mqtt === 'undefined') return;   // 오프라인이면 로컬 전용으로 동작
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: 'calmemo-' + myId, keepalive: 30 });
     client.on('connect', () => {
-      client.subscribe('calmemo/' + room, () => publish({ type: 'sync-request' }));
+      client.subscribe('calmemo/' + SHARE_ROOM, () => publish({ type: 'sync-request' }));
       setStatus(true);
     });
     client.on('message', (topic, payload) => {
@@ -441,8 +374,6 @@
     client.on('close', () => setStatus(false));
     client.on('error', () => setStatus(false));
   }
-  function disconnect() { if (client) { client.end(); client = null; room = null; setStatus(false); } }
-  shareBtn.onclick = () => { client ? disconnect() : connectRoom(roomInput.value); };
 
   /* ---------- 연/월 선택기 ---------- */
   for (let y = 1950; y <= 2050; y++) yearSel.add(new Option(y + '년', y));
@@ -454,15 +385,10 @@
     Object.keys(memos).sort().forEach(k => {
       memos[k].forEach(m => { if (m.important) impList.push({ date: k, text: m.text }); });
     });
-    impIdx = 0;
-    showImportant();
+    impIdx = 0; showImportant();
   }
   function showImportant() {
-    if (!impList.length) {
-      ticker.innerHTML = '<span class="dim">★ 중요 메모가 없습니다</span>';
-      ticker.dataset.date = '';
-      return;
-    }
+    if (!impList.length) { ticker.innerHTML = '<span class="dim">★ 중요 메모가 없습니다</span>'; ticker.dataset.date = ''; return; }
     const i = impIdx % impList.length, it = impList[i];
     ticker.innerHTML = `<span class="star">★</span><span class="date">${it.date}</span> : <b>${esc(it.text)}</b>
                         <span class="dim">(${i + 1}/${impList.length})</span>`;
@@ -484,6 +410,7 @@
 
     const startOffset = new Date(view.y, view.m, 1).getDay();
     const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+    // 해당 월 날짜가 포함된 주만 표시 (일반 종이달력과 동일, 4~6줄 가변)
     const total = Math.ceil((startOffset + daysInMonth) / 7) * 7;
     const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -501,8 +428,7 @@
       if (key === todayKey) cell.classList.add('today');
       if (hName) cell.classList.add('holiday');
 
-      cell.innerHTML = `<div class="day">${d.getDate()}</div>` +
-                       (hName ? `<div class="holiday">${hName}</div>` : '');
+      cell.innerHTML = `<div class="day">${d.getDate()}</div>` + (hName ? `<div class="holiday">${hName}</div>` : '');
 
       const list = memos[key] || [];
       if (list.length) {
@@ -536,20 +462,15 @@
     const [y, m, d] = key.split('-').map(Number);
     const h = getHoliday(y, m - 1, d);
     modalTitle.textContent = `${y}년 ${m}월 ${d}일 메모` + (h ? ` (${h})` : '');
-    resetEdit();
-    renderList();
+    resetEdit(); renderList();
     modal.classList.remove('hidden');
     memoInput.focus();
   }
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
-    editingIdx = null;
-    memoInput.value = '';
-    impChk.checked = false;
-    addBtn.textContent = '추가';
-    cancelEditBtn.style.display = 'none';
+    editingIdx = null; memoInput.value = ''; impChk.checked = false;
+    addBtn.textContent = '추가'; cancelEditBtn.style.display = 'none';
   }
-
   function renderList() {
     const list = memos[selectedKey] || [];
     memoList.innerHTML = '';
@@ -563,10 +484,8 @@
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; afterChange(); };
       li.querySelector('.act').onclick = () => {
         editingIdx = i;
-        memoInput.value = m.text;
-        impChk.checked = m.important;
-        addBtn.textContent = '저장';
-        cancelEditBtn.style.display = 'inline-block';
+        memoInput.value = m.text; impChk.checked = m.important;
+        addBtn.textContent = '저장'; cancelEditBtn.style.display = 'inline-block';
         memoInput.focus();
       };
       li.querySelector('.del').onclick = () => {
@@ -577,21 +496,16 @@
       memoList.appendChild(li);
     });
   }
-
   function addMemo() {
     const t = memoInput.value.trim();
     if (!t) return;
-    if (editingIdx === null) {
-      (memos[selectedKey] ||= []).push({ text: t, important: impChk.checked });
-    } else {
-      memos[selectedKey][editingIdx] = { text: t, important: impChk.checked };
-    }
-    resetEdit();
-    afterChange();
+    if (editingIdx === null) (memos[selectedKey] ||= []).push({ text: t, important: impChk.checked });
+    else memos[selectedKey][editingIdx] = { text: t, important: impChk.checked };
+    resetEdit(); afterChange();
   }
   function afterChange() {
     save(); renderList(); render(); buildImportant();
-    publish({ type: 'memos' });
+    publish({ type: 'memos' });   // 실시간 공유 전송
   }
 
   /* ---------- 이벤트 ---------- */
@@ -603,15 +517,14 @@
   $('#jumpBtn').onclick = () => {
     if (!dateJump.value) return;
     const [y, m] = dateJump.value.split('-').map(Number);
-    view = { y, m: m - 1 };
-    render();
+    view = { y, m: m - 1 }; render();
   };
   addBtn.onclick = addMemo;
   cancelEditBtn.onclick = resetEdit;
   $('#closeBtn').onclick = closeModal;
   memoInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMemo(); });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeGhSettings(); } });
 
   $('#ghSettingsBtn').onclick = openGhSettings;
   $('#ghSaveBtn').onclick = saveGhSettings;
@@ -621,11 +534,11 @@
   $('#ghBackupBtn').onclick = backupToGh;
   $('#ghRestoreBtn').onclick = restoreFromGh;
   ghModal.addEventListener('click', e => { if (e.target === ghModal) closeGhSettings(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeGhSettings(); } });
 
   updateGhStatus();
   render();
   buildImportant();
+  connectShare();   // 시작과 동시에 실시간 공유 자동 연결
 </script>
 </body>
 </html>
