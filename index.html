@@ -6,17 +6,12 @@
 <title>캘린더 메모</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>" />
 <script>
-  /* MQTT 라이브러리 다중 CDN 폴백 로더 */
   (function loadMqtt(sources) {
-    if (!sources.length) {
-      console.warn('MQTT 라이브러리를 불러오지 못했습니다. 공유 기능이 비활성화됩니다.');
-      window.__mqttFailed = true;
-      return;
-    }
+    if (!sources.length) { window.__mqttFailed = true; return; }
     const s = document.createElement('script');
     s.src = sources[0];
-    s.onload = () => console.log('MQTT 로드 성공:', sources[0]);
-    s.onerror = () => { console.warn('CDN 실패:', sources[0]); s.remove(); loadMqtt(sources.slice(1)); };
+    s.onload = () => { window.__mqttLoaded = true; console.log('MQTT 로드 성공:', sources[0]); };
+    s.onerror = () => { s.remove(); loadMqtt(sources.slice(1)); };
     document.head.appendChild(s);
   })([
     'https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js',
@@ -153,7 +148,9 @@
   .login-box .field input,.login-box .field select{width:100%;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:10px 12px;font-size:14px;outline:none;}
   .login-box .field input:focus{border-color:var(--blue);}
   .login-box #loginBtn{width:100%;margin-top:8px;background:var(--blue);border:none;color:#fff;border-radius:6px;padding:11px;cursor:pointer;font-size:14px;font-weight:600;}
-  .login-box .hint{margin-top:14px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center;}
+  .login-box #loginBtn:disabled{opacity:0.6;cursor:wait;}
+  .sync-indicator{font-size:11px;color:var(--green);text-align:center;margin-top:8px;min-height:14px;}
+  .login-box .hint{margin-top:10px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center;}
 
   .acct-create{display:flex;gap:8px;flex-wrap:wrap;}
   .acct-create input{flex:1;min-width:100px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
@@ -192,7 +189,6 @@
 </head>
 <body>
 
-<!-- 로그인 화면 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <h1>📅 캘린더 메모 로그인</h1>
@@ -208,9 +204,10 @@
       </select>
     </div>
     <button id="loginBtn">로그인</button>
-    <div class="hint"><br>비밀번호는 숫자 4~8자리 · 계정 관리(생성/수정/삭제)는 관리자만 가능<br>
-      팀 코드가 같아야 같은 팀으로 공유됩니다.<br>
-      처음 로그인 시 이전 버전의 메모가 자동 복구됩니다.</div>
+    <div class="sync-indicator" id="syncIndicator"></div>
+    <div class="hint">관리자 계정: <b>obj1407</b> / 초기 비밀번호 <b>1407</b><br>
+      비밀번호는 숫자 4~8자리 · 계정 관리(생성/수정/삭제)는 관리자만 가능<br>
+      팀 코드가 같아야 같은 팀으로 공유됩니다.</div>
   </div>
 </div>
 
@@ -244,7 +241,6 @@
 
 <div class="grid" id="grid"></div>
 
-<!-- 메모 모달 -->
 <div class="modal hidden" id="modal">
   <div class="modal-box">
     <h2 id="modalTitle"></h2>
@@ -279,7 +275,6 @@
   </div>
 </div>
 
-<!-- 저장 완료 팝업 -->
 <div class="modal hidden" id="savedModal">
   <div class="saved-box">
     <h2>✅ 메모가 저장되었습니다</h2>
@@ -288,7 +283,6 @@
   </div>
 </div>
 
-<!-- 주간 요약 모달 -->
 <div class="modal hidden" id="weekModal">
   <div class="modal-box">
     <h2 id="weekTitle"></h2>
@@ -297,7 +291,6 @@
   </div>
 </div>
 
-<!-- 계정 관리 모달 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
     <h2>👥 계정 관리 (관리자 전용)</h2>
@@ -311,7 +304,6 @@
   </div>
 </div>
 
-<!-- 이미지 확대 라이트박스 -->
 <div class="lightbox hidden" id="lightbox"><img id="lightboxImg" /></div>
 
 <div class="toast" id="toast"></div>
@@ -321,6 +313,7 @@
   const grid = $('#grid'), ticker = $('#ticker');
   const loginWrap = $('#loginWrap'), teamInput = $('#teamInput'), idInput = $('#idInput'),
         pwInput = $('#pwInput'), logoutSel = $('#logoutSel'), loginBtn = $('#loginBtn'),
+        syncIndicator = $('#syncIndicator'),
         userBadge = $('#userBadge'), acctBtn = $('#acctBtn'), logoutBtn = $('#logoutBtn'),
         acctModal = $('#acctModal'), acctList = $('#acctList'),
         newId = $('#newId'), newPw = $('#newPw'),
@@ -367,7 +360,6 @@
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
 
-  /* ---------- 저장소 사용량 ---------- */
   const QUOTA = 5 * 1024 * 1024;
   function updateStorage() {
     const json = localStorage.getItem(memKey()) || '';
@@ -378,7 +370,6 @@
     storageInfo.className = 'storage' + (pct > 80 ? ' warn' : (pct > 50 ? ' mid' : ''));
   }
 
-  /* ---------- 뒤로가기 ---------- */
   function anyModalOpen() {
     return !modal.classList.contains('hidden') ||
            !savedModal.classList.contains('hidden') ||
@@ -409,25 +400,32 @@
     }
   });
 
-  /* ---------- 라이트박스 ---------- */
   function openLightbox(src) { lightboxImg.src = src; lightbox.classList.remove('hidden'); }
   lightbox.onclick = () => { lightbox.classList.add('hidden'); lightboxImg.src = ''; };
 
-  /* ---------- 알람 소리 ---------- */
+  /* ---------- 알람 소리 (안전한 초기화) ---------- */
   let alarmOn = localStorage.getItem('alarmOn') !== '0';
   let audioCtx = null;
-  function initAudio() {
-    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return false; }
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    return true;
   }
   function beep(freq, dur) {
-    if (!audioCtx) return;
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = freq; o.type = 'sine'; g.gain.value = 0.08;
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start();
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-    o.stop(audioCtx.currentTime + dur);
+    if (!ensureAudio()) return;
+    try {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = freq; o.type = 'sine'; g.gain.value = 0.08;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      o.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
   }
   function updateBell() { bellBtn.textContent = alarmOn ? '🔔' : '🔕'; }
   function notify(msg) {
@@ -437,16 +435,20 @@
     if ('Notification' in window && Notification.permission === 'granted') new Notification('캘린더 메모', { body: msg });
   }
   bellBtn.onclick = async () => {
+    ensureAudio();   // 사용자 제스처에서 초기화
     alarmOn = !alarmOn;
     localStorage.setItem('alarmOn', alarmOn ? '1' : '0');
     updateBell();
     if (alarmOn) {
-      initAudio();
       if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+      beep(880, .15);   // 알림음으로 확인
       notify('알람이 켜졌습니다.');
     } else showToast('알람이 꺼졌습니다.');
   };
-  document.addEventListener('pointerdown', initAudio, { once: true });
+  /* 버튼/텍스트 등 모든 사용자 제스처에서 오디오 초기화 준비 */
+  document.addEventListener('click', ensureAudio, { passive: true });
+  document.addEventListener('touchstart', ensureAudio, { passive: true });
+  document.addEventListener('keydown', ensureAudio, { passive: true });
 
   /* ---------- 공휴일 ---------- */
   const FIXED_HOLIDAYS = {'01-01':'신정','03-01':'삼일절','05-05':'어린이날','06-06':'현충일',
@@ -473,7 +475,6 @@
     return null;
   }
 
-  /* ---------- 메모 정규화 ---------- */
   function normalizeMemos(raw) {
     const out = {};
     Object.keys(raw || {}).forEach(k => {
@@ -490,7 +491,6 @@
     return out;
   }
 
-  /* ---------- 메모 저장 ---------- */
   let memos = {};
   function loadMemos() {
     let parsed = null;
@@ -515,7 +515,6 @@
     } catch (e) {}
   }
 
-  /* ---------- 백업 내보내기/가져오기 ---------- */
   exportBtn.onclick = () => {
     if (!session) return;
     const data = { app: 'calendar-memo', team: TEAM, exportedAt: new Date().toISOString(), memos };
@@ -564,13 +563,13 @@
   };
 
   /* ---------- 계정 관리 ---------- */
-  function loadAccounts() {
+  function loadAccountsLocal(team) {
     let acc = null;
-    try { acc = JSON.parse(localStorage.getItem(accKey())); } catch (e) {}
+    try { acc = JSON.parse(localStorage.getItem('accounts_' + team)); } catch (e) {}
     if (!acc || !acc[ADMIN]) {
       acc = acc || {};
       if (!acc[ADMIN]) acc[ADMIN] = { pw: '1407' };
-      localStorage.setItem(accKey(), JSON.stringify(acc));
+      localStorage.setItem('accounts_' + team, JSON.stringify(acc));
     }
     return acc;
   }
@@ -639,69 +638,13 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 로그인/로그아웃 ---------- */
-  loginBtn.onclick = () => {
-    const team = teamInput.value.trim() || 'our-team';
-    const id = idInput.value.trim();
-    const pw = pwInput.value.trim();
-    if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
-    TEAM = team;
-    accounts = loadAccounts();
-    if (!accounts[id] || accounts[id].pw !== pw) {
-      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
-      return;
-    }
-    session = { team, user: id, timeoutMin: +logoutSel.value };
-    sessionStorage.setItem('session', JSON.stringify(session));
-    enterApp();
-  };
-  function enterApp() {
-    loginWrap.style.display = 'none';
-    userBadge.textContent = `👤 ${session.user} · ${session.team}`;
-    acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
-    loadMemos();
-    migrateLegacy();
-    updateStorage(); render(); buildImportant();
-    waitForMqtt(connectShare);
-    lastActivity = Date.now();
-  }
-  /* 라이브러리 지연 로드 대기 (최대 10초) */
-  function waitForMqtt(cb, tries = 10) {
-    if (typeof mqtt !== 'undefined') return cb();
-    if (window.__mqttFailed) { showToast('공유 라이브러리 로드 실패로 공유가 꺼졌습니다.', 'err'); return; }
-    if (tries <= 0) { showToast('공유 라이브러리를 불러오지 못해 공유가 꺼졌습니다.', 'err'); return; }
-    setTimeout(() => waitForMqtt(cb, tries - 1), 1000);
-  }
-  function doLogout(msg) {
-    if (client) { client.end(); client = null; }
-    session = null;
-    sessionStorage.removeItem('session');
-    memos = {};
-    closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
-    acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
-    setStatus(false);
-    loginWrap.style.display = 'flex';
-    pwInput.value = '';
-    if (msg) setTimeout(() => alert(msg), 100);
-  }
-  logoutBtn.onclick = () => doLogout();
-  acctBtn.onclick = () => { renderAcctList(); acctModal.classList.remove('hidden'); };
-  $('#acctCloseBtn').onclick = () => acctModal.classList.add('hidden');
-  acctModal.addEventListener('click', e => { if (e.target === acctModal) acctModal.classList.add('hidden'); });
-
-  let lastActivity = Date.now();
-  ['pointerdown','keydown','touchstart','mousemove'].forEach(ev =>
-    document.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true }));
-  setInterval(() => {
-    if (!session || !session.timeoutMin) return;
-    if (Date.now() - lastActivity > session.timeoutMin * 60000) {
-      doLogout('미사용 시간이 초과되어 자동 로그아웃되었습니다.');
-    }
-  }, 5000);
-
-  /* ---------- 실시간 공유 ---------- */
+  /* ---------- 로그인 (백그라운드 계정 동기화 포함) ---------- */
   const myId = Math.random().toString(36).slice(2, 10);
   let client = null;
+  let preConnect = null;   // 로그인 전 계정 동기화용
+  let preAccounts = null;
+  let preSyncTimer = null;
+
   function setStatus(on) {
     shareStatus.className = 'dot' + (on ? ' on' : '');
     shareStatus.title = on ? '실시간 공유 연결됨' : '연결 안 됨';
@@ -730,16 +673,112 @@
       client.publish(`calmemo/${TEAM}/memos`, JSON.stringify(msg));
     }
   }
-  function connectShare() {
+
+  /* ★ 로그인 전 계정 목록을 받아오기 위한 사전 연결 */
+  function startPreConnect(team) {
     if (typeof mqtt === 'undefined') return;
-    if (client) { client.end(); client = null; }
-    client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: 'calmemo-' + myId, keepalive: 30 });
-    client.on('connect', () => {
-      client.subscribe([`calmemo/${TEAM}/memos`, `calmemo/${TEAM}/accounts`], () => {
-        publish({ type: 'sync-request' });
-      });
-      setStatus(true);
+    if (preConnect) { try { preConnect.end(true); } catch(e){} preConnect = null; }
+    preAccounts = null;
+    const cid = 'pre-' + myId;
+    preConnect = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: cid, keepalive: 30 });
+    preConnect.on('connect', () => {
+      preConnect.subscribe(`calmemo/${team}/accounts`);
+      preConnect.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, type: 'sync-request' }));
     });
+    preConnect.on('message', (topic, payload) => {
+      let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+      if (msg.sender === myId) return;
+      if (msg.type === 'accounts' && msg.data && msg.data[ADMIN]) {
+        preAccounts = msg.data;
+        syncIndicator.textContent = '✓ 팀 계정 동기화 완료';
+      } else if (msg.type === 'sync-request') {
+        const local = loadAccountsLocal(team);
+        preConnect.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, type: 'accounts', data: local }));
+      }
+    });
+    preConnect.on('error', () => {});
+  }
+  teamInput.addEventListener('input', () => {
+    const t = teamInput.value.trim() || 'our-team';
+    syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
+    startPreConnect(t);
+  });
+  /* 초기 실행 */
+  syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
+  window.addEventListener('load', () => {
+    const waitForMqttInit = setInterval(() => {
+      if (typeof mqtt !== 'undefined') {
+        clearInterval(waitForMqttInit);
+        startPreConnect(teamInput.value.trim() || 'our-team');
+      }
+    }, 200);
+    setTimeout(() => clearInterval(waitForMqttInit), 10000);
+  });
+
+  loginBtn.onclick = async () => {
+    const team = teamInput.value.trim() || 'our-team';
+    const id = idInput.value.trim();
+    const pw = pwInput.value.trim();
+    if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
+    
+    TEAM = team;
+    /* 1차: 로컬 캐시된 계정으로 빠른 검증 */
+    let localAcc = loadAccountsLocal(team);
+    if (localAcc[id] && localAcc[id].pw === pw) {
+      accounts = localAcc;
+    } else {
+      /* 2차: MQTT로 받은 최신 계정으로 재검증 (최대 2초 대기) */
+      loginBtn.disabled = true;
+      loginBtn.textContent = '계정 확인 중...';
+      syncIndicator.textContent = '🔄 최신 계정 확인 중...';
+      let waitTime = 0;
+      while (!preAccounts && waitTime < 2000) {
+        await new Promise(r => setTimeout(r, 100));
+        waitTime += 100;
+      }
+      const finalAcc = preAccounts || localAcc;
+      if (!finalAcc[id] || finalAcc[id].pw !== pw) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+        syncIndicator.textContent = preAccounts ? '✓ 계정 확인 완료' : '';
+        alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      accounts = finalAcc;
+      localStorage.setItem(accKey(), JSON.stringify(accounts));
+    }
+
+    session = { team, user: id, timeoutMin: +logoutSel.value };
+    sessionStorage.setItem('session', JSON.stringify(session));
+    enterApp();
+  };
+
+  function enterApp() {
+    loginWrap.style.display = 'none';
+    syncIndicator.textContent = '';
+    userBadge.textContent = `👤 ${session.user} · ${session.team}`;
+    acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
+    loadMemos();
+    migrateLegacy();
+    updateStorage(); render(); buildImportant();
+    
+    /* 사전 연결을 메인 연결로 승격 */
+    if (preConnect) {
+      client = preConnect;
+      preConnect = null;
+      client.subscribe([`calmemo/${TEAM}/memos`]);
+      client.publish(`calmemo/${TEAM}/memos`, JSON.stringify({ sender: myId, type: 'sync-request' }));
+      setStatus(true);
+      setupClientHandlers();
+    } else {
+      connectShare();
+    }
+    lastActivity = Date.now();
+  }
+
+  function setupClientHandlers() {
+    if (!client) return;
+    client.removeAllListeners && client.removeAllListeners('message');
     client.on('message', (topic, payload) => {
       let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
       if (msg.sender === myId) return;
@@ -774,6 +813,52 @@
     client.on('close', () => setStatus(false));
     client.on('error', () => setStatus(false));
   }
+
+  function connectShare() {
+    if (typeof mqtt === 'undefined') return;
+    if (client) { client.end(); client = null; }
+    client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: 'calmemo-' + myId, keepalive: 30 });
+    client.on('connect', () => {
+      client.subscribe([`calmemo/${TEAM}/memos`, `calmemo/${TEAM}/accounts`], () => {
+        publish({ type: 'sync-request' });
+      });
+      setStatus(true);
+    });
+    setupClientHandlers();
+  }
+
+  function doLogout(msg) {
+    if (client) { client.end(); client = null; }
+    if (preConnect) { try { preConnect.end(true); } catch(e){} preConnect = null; }
+    session = null;
+    sessionStorage.removeItem('session');
+    memos = {};
+    closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
+    acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
+    setStatus(false);
+    loginWrap.style.display = 'flex';
+    pwInput.value = '';
+    loginBtn.disabled = false;
+    loginBtn.textContent = '로그인';
+    if (msg) setTimeout(() => alert(msg), 100);
+    /* 로그아웃 후에도 새 팀 계정 동기화 시작 */
+    startPreConnect(teamInput.value.trim() || 'our-team');
+    syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
+  }
+  logoutBtn.onclick = () => doLogout();
+  acctBtn.onclick = () => { renderAcctList(); acctModal.classList.remove('hidden'); };
+  $('#acctCloseBtn').onclick = () => acctModal.classList.add('hidden');
+  acctModal.addEventListener('click', e => { if (e.target === acctModal) acctModal.classList.add('hidden'); });
+
+  let lastActivity = Date.now();
+  ['pointerdown','keydown','touchstart','mousemove'].forEach(ev =>
+    document.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true }));
+  setInterval(() => {
+    if (!session || !session.timeoutMin) return;
+    if (Date.now() - lastActivity > session.timeoutMin * 60000) {
+      doLogout('미사용 시간이 초과되어 자동 로그아웃되었습니다.');
+    }
+  }, 5000);
 
   /* ---------- 연/월 ---------- */
   for (let y = 1950; y <= 2050; y++) yearSel.add(new Option(y + '년', y));
@@ -1101,7 +1186,7 @@
     try {
       session = JSON.parse(savedSession);
       TEAM = session.team;
-      accounts = loadAccounts();
+      accounts = loadAccountsLocal(TEAM);
       if (accounts[session.user]) enterApp();
       else { session = null; sessionStorage.removeItem('session'); }
     } catch (e) { session = null; }
