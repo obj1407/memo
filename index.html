@@ -61,25 +61,38 @@
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;}
   .modal.hidden{display:none;}
-  .modal-box{width:480px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  .modal-box{width:540px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .modal-box h2{font-size:16px;margin-bottom:14px;}
-  .input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .input-row input[type=text]{flex:1;min-width:140px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
-  .input-row input[type=text]:focus{border-color:var(--blue);}
+  .input-row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+  .input-row textarea{flex:1;min-width:180px;min-height:70px;resize:vertical;background:#12161b;border:1px solid #333a43;
+                      border-radius:6px;color:var(--text);padding:9px 11px;font-size:13px;outline:none;font-family:inherit;line-height:1.5;}
+  .input-row textarea:focus{border-color:var(--blue);}
   .chk{display:flex;align-items:center;gap:5px;font-size:13px;color:#ff8787;cursor:pointer;user-select:none;}
   .chk.priv{color:var(--purple);}
   .chk.alarm{color:var(--yellow);}
   .chk input{accent-color:currentColor;width:15px;height:15px;cursor:pointer;}
-  .input-row button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
+  .input-row button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:9px 16px;cursor:pointer;font-size:13px;align-self:flex-end;}
   #cancelEditBtn{background:#232930;border:1px solid #333a43 !important;color:var(--text) !important;}
   .opt-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px;}
   .opt-row .lbl{color:var(--dim);}
-  .opt-row select{background:#232930;border:1px solid #333a43;color:var(--text);padding:4px 6px;border-radius:6px;font-size:12px;outline:none;}
+  .opt-row select,.opt-row input[type=number]{background:#232930;border:1px solid #333a43;color:var(--text);padding:4px 6px;border-radius:6px;font-size:12px;outline:none;}
+  .opt-row input[type=number]{width:55px;}
+  .opt-row input[type=time]{background:#232930;border:1px solid #333a43;color:var(--text);padding:4px 6px;border-radius:6px;font-size:12px;outline:none;color-scheme:dark;}
+
+  .img-upload{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .img-upload .up-btn{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
+  .img-upload .up-btn:hover{background:#2d343c;}
+  .img-upload .help{font-size:11px;color:var(--dim);}
+  .img-preview{margin-top:8px;position:relative;display:inline-block;max-width:100%;}
+  .img-preview img{max-width:100%;max-height:180px;border-radius:6px;border:1px solid #333a43;}
+  .img-preview .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;}
+
   .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;}
   .memo-list li{display:flex;align-items:center;gap:6px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
   .memo-list li .star-btn,.memo-list li .lock-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
   .memo-list li .star-btn.on{color:var(--red);}
   .memo-list li .lock-btn.on{color:var(--purple);}
+  .memo-list li .thumb{width:30px;height:30px;border-radius:4px;object-fit:cover;border:1px solid #333a43;}
   .memo-list li .txt{flex:1;word-break:break-all;}
   .memo-list li .txt.imp{color:#ff8787;}
   .memo-list li .txt.priv{color:var(--purple);}
@@ -88,6 +101,19 @@
   .empty{color:var(--dim);font-size:12px;margin-top:12px;text-align:center;}
   .close-row{margin-top:16px;text-align:right;}
   .close-row button{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;}
+
+  /* 저장 완료 팝업 */
+  .saved-box{width:420px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  .saved-box h2{font-size:16px;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .saved-info{background:#12161b;border:1px solid #333a43;border-radius:8px;padding:14px;}
+  .saved-info .date{color:var(--blue);font-size:13px;margin-bottom:8px;}
+  .saved-info .text{font-size:14px;line-height:1.6;color:var(--text);word-break:break-all;}
+  .saved-info .meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--dim);}
+  .saved-info .meta span{background:#232930;padding:3px 8px;border-radius:4px;}
+  .saved-info .meta .red{color:#ff8787;}
+  .saved-info .meta .pur{color:var(--purple);}
+  .saved-info .meta .yel{color:var(--yellow);}
+  .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;}
 
   /* 주간 요약 */
   .week-body{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;}
@@ -155,7 +181,7 @@
     <button id="ghRestoreBtn" class="gh-btn">⬇️ 복원</button>
     <span id="ghStatusMsg" class="gh-status"></span>
   </span>
-  <div class="ticker" id="ticker" title="클릭 시 해당 날짜로 이동"></div>
+  <div class="ticker" id="ticker" title="더블클릭 시 해당 날짜로 이동"></div>
 </div>
 
 <div class="weekdays">
@@ -169,23 +195,42 @@
   <div class="modal-box">
     <h2 id="modalTitle"></h2>
     <div class="input-row">
-      <input type="text" id="memoInput" placeholder="메모를 입력하세요" maxlength="100" />
-      <label class="chk"><input type="checkbox" id="impChk" />중요</label>
-      <label class="chk priv"><input type="checkbox" id="privChk" />🔒 개인</label>
-      <button id="addBtn">추가</button>
-      <button id="cancelEditBtn" style="display:none;">취소</button>
+      <textarea id="memoInput" placeholder="메모를 입력하세요 (Enter: 저장, Shift+Enter: 줄바꿈)" maxlength="500"></textarea>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button id="addBtn">추가</button>
+        <button id="cancelEditBtn" style="display:none;">취소</button>
+      </div>
     </div>
     <div class="opt-row">
       <span class="lbl">시간</span><input type="time" id="timeInput" title="메모 시간(미입력 시 09:00)" />
+      <label class="chk"><input type="checkbox" id="impChk" />중요</label>
+      <label class="chk priv"><input type="checkbox" id="privChk" />🔒 개인</label>
+    </div>
+    <div class="opt-row">
       <label class="chk alarm"><input type="checkbox" id="alarmDayChk" />하루 전 알람</label>
-      <label class="chk alarm"><input type="checkbox" id="alarmHoursChk" />시간 전 알람</label>
-      <select id="alarmHoursSel">
-        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-        <option value="6">6</option><option value="12">12</option><option value="24">24</option>
-      </select><span class="lbl">시간 전</span>
+      <label class="chk alarm"><input type="checkbox" id="alarmTimeChk" />시간 전 알람</label>
+      <input type="number" id="alarmH" min="0" max="720" value="1" /> <span class="lbl">시간</span>
+      <input type="number" id="alarmM" min="0" max="59" value="0" /> <span class="lbl">분 전</span>
+    </div>
+    <div class="img-upload">
+      <label class="up-btn">📷 사진 첨부<input type="file" id="imgFile" accept="image/*" style="display:none" /></label>
+      <span class="help">자동으로 800px 이하로 축소됩니다</span>
+    </div>
+    <div class="img-preview hidden" id="imgPreview">
+      <img id="imgThumb" />
+      <button class="rm" id="imgRemoveBtn" title="사진 삭제">✕</button>
     </div>
     <ul class="memo-list" id="memoList"></ul>
     <div class="close-row"><button id="closeBtn">닫기</button></div>
+  </div>
+</div>
+
+<!-- 저장 완료 팝업 -->
+<div class="modal hidden" id="savedModal">
+  <div class="saved-box">
+    <h2>✅ 메모가 저장되었습니다</h2>
+    <div class="saved-info" id="savedInfo"></div>
+    <div class="close-row"><button id="savedCloseBtn">확인</button></div>
   </div>
 </div>
 
@@ -219,7 +264,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  /* ★ 실시간 공유 방 코드 */
   const SHARE_ROOM = 'our-team-calendar';
 
   const $ = s => document.querySelector(s);
@@ -228,10 +272,13 @@
         memoInput = $('#memoInput'), memoList = $('#memoList'),
         impChk = $('#impChk'), privChk = $('#privChk'),
         timeInput = $('#timeInput'), alarmDayChk = $('#alarmDayChk'),
-        alarmHoursChk = $('#alarmHoursChk'), alarmHoursSel = $('#alarmHoursSel'),
+        alarmTimeChk = $('#alarmTimeChk'), alarmH = $('#alarmH'), alarmM = $('#alarmM'),
         addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
         yearSel = $('#yearSel'), monthSel = $('#monthSel'), dateJump = $('#dateJump'),
         shareStatus = $('#shareStatus'), bellBtn = $('#bellBtn'),
+        imgFile = $('#imgFile'), imgPreview = $('#imgPreview'),
+        imgThumb = $('#imgThumb'), imgRemoveBtn = $('#imgRemoveBtn'),
+        savedModal = $('#savedModal'), savedInfo = $('#savedInfo'),
         weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
         ghModal = $('#ghModal'), ghRepo = $('#ghRepo'), ghPath = $('#ghPath'), ghToken = $('#ghToken'),
         ghStatus = $('#ghStatus'), ghStatusMsg = $('#ghStatusMsg'),
@@ -241,7 +288,7 @@
   let view = { y: now.getFullYear(), m: now.getMonth() };
   let selectedKey = null, editingIdx = null;
   let impList = [], impIdx = 0;
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  let currentImage = '';   // base64
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
   const pad = n => String(n).padStart(2, '0');
@@ -250,12 +297,41 @@
   const countAll = obj => Object.values(obj).reduce((s, a) => s + a.length, 0);
   const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+  /* 모달이 열려있는지 체크 (뒤로가기 방지용) */
+  function anyModalOpen() {
+    return !modal.classList.contains('hidden') ||
+           !savedModal.classList.contains('hidden') ||
+           !weekModal.classList.contains('hidden') ||
+           !ghModal.classList.contains('hidden');
+  }
+
   function showToast(msg, type='') {
     toast.textContent = msg;
     toast.className = 'toast show ' + type;
     clearTimeout(toast._t);
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
+
+  /* ---------- 뒤로가기/탭 닫기 방지 ---------- */
+  window.addEventListener('beforeunload', e => {
+    if (Object.keys(memos).length > 0) {
+      e.preventDefault();
+      e.returnValue = '종료하시겠습니까? 저장하지 않은 변경사항이 사라질 수 있습니다.';
+      return e.returnValue;
+    }
+  });
+  // 브라우저 뒤로가기/앞으로가기 버튼도 차단
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', () => {
+    if (confirm('종료하시겠습니까?')) {
+      window.removeEventListener('beforeunload', () => {});
+      window.close();
+      // close()가 차단된 브라우저에서는 이전 페이지로 이동
+      history.go(-1);
+    } else {
+      history.pushState(null, '', location.href);
+    }
+  });
 
   /* ---------- 알람(소리+시스템 알림) ---------- */
   let alarmOn = localStorage.getItem('alarmOn') !== '0';
@@ -322,8 +398,8 @@
   if (localStorage.getItem('calMemos') === null) {
     const t = new Date(), yst = new Date(t.getTime() - 864e5);
     memos = {
-      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ id: genId(), text: '회의실 도어 점검 요청', important: false, private: false, time: '', alarmDay: false, alarmHours: 0 }],
-      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ id: genId(), text: '오전 7시 네트워크 점검', important: true, private: false, time: '07:00', alarmDay: false, alarmHours: 0 }]
+      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ id: genId(), text: '회의실 도어 점검 요청', important: false, private: false, time: '', alarmDay: false, alarmMin: 0 }],
+      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ id: genId(), text: '오전 7시 네트워크 점검', important: true, private: false, time: '07:00', alarmDay: false, alarmMin: 60 }]
     };
     save();
   } else {
@@ -331,9 +407,13 @@
   }
   Object.keys(memos).forEach(k => {
     memos[k] = memos[k].map(x => typeof x === 'string'
-      ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmHours: 0 }
-      : { id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
-          time: x.time || '', alarmDay: !!x.alarmDay, alarmHours: x.alarmHours || 0 });
+      ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }
+      : {
+          id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
+          time: x.time || '', alarmDay: !!x.alarmDay,
+          alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),   // 이전 버전 호환
+          image: x.image || ''
+        });
   });
   function save() { localStorage.setItem('calMemos', JSON.stringify(memos)); }
 
@@ -353,11 +433,51 @@
     });
     return merged;
   }
+  function fmtAlarm(m) {
+    if (!m.alarmMin) return '';
+    const h = Math.floor(m.alarmMin / 60), mm = m.alarmMin % 60;
+    return (h ? h + '시간 ' : '') + (mm ? mm + '분' : '') + ' 전';
+  }
   function memoLabel(m) {
     return (m.private ? '🔒 ' : (m.important ? '★ ' : '')) +
            (m.time ? `[${m.time}] ` : '') + m.text +
-           ((m.alarmDay || m.alarmHours > 0) ? ' ⏰' : '');
+           (m.image ? ' 📷' : '') +
+           ((m.alarmDay || m.alarmMin > 0) ? ' ⏰' : '');
   }
+
+  /* ---------- 사진 첨부 ---------- */
+  imgFile.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { alert('이미지 파일만 업로드 가능합니다.'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 800;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+          else { width = Math.round(width * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        currentImage = canvas.toDataURL('image/jpeg', 0.8);
+        imgThumb.src = currentImage;
+        imgPreview.classList.remove('hidden');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+    imgFile.value = '';
+  };
+  imgRemoveBtn.onclick = () => {
+    currentImage = '';
+    imgThumb.src = '';
+    imgPreview.classList.add('hidden');
+  };
 
   /* ---------- 미래 메모 알람 엔진 ---------- */
   function memoDateTime(key, m) {
@@ -369,7 +489,7 @@
     const dt = memoDateTime(key, m);
     const arr = [];
     if (m.alarmDay) { const d1 = new Date(dt); d1.setDate(d1.getDate() - 1); arr.push({ t: d1, type: 'day' }); }
-    if (m.alarmHours > 0) arr.push({ t: new Date(dt.getTime() - m.alarmHours * 3600e3), type: 'hours' });
+    if (m.alarmMin > 0) arr.push({ t: new Date(dt.getTime() - m.alarmMin * 60000), type: 'min' });
     return arr;
   }
   let lastAlarmCheck = Date.now();
@@ -379,12 +499,12 @@
     const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     Object.entries(memos).forEach(([k, list]) => {
       const [yy, mm, dd] = k.split('-').map(Number);
-      if (new Date(yy, mm - 1, dd).getTime() < todayStart) return;   // 오늘 이후 메모만
+      if (new Date(yy, mm - 1, dd).getTime() < todayStart) return;
       (list || []).forEach(m => {
         getAlarmTimes(k, m).forEach(a => {
           const at = a.t.getTime();
           if (at > lastAlarmCheck && at <= nowT) {
-            const label = a.type === 'day' ? '하루 전 알람' : `${m.alarmHours}시간 전 알람`;
+            const label = a.type === 'day' ? '하루 전 알람' : `${fmtAlarm({alarmMin: m.alarmMin})} 알람`;
             notify(`⏰ ${label} → ${m.text} (${+mm}/${+dd} ${m.time || '09:00'})`);
           }
         });
@@ -393,10 +513,10 @@
     lastAlarmCheck = nowT;
   }
 
-  /* ---------- 주간 메모 요약 (월 09:30 / 금 15:30 자동) ---------- */
+  /* ---------- 주간 메모 요약 ---------- */
   function weekDates() {
     const d = new Date();
-    const dow = (d.getDay() + 6) % 7;   // 월=0
+    const dow = (d.getDay() + 6) % 7;
     const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
     return [...Array(7)].map((_, i) => { const t = new Date(mon); t.setDate(mon.getDate() + i); return t; });
   }
@@ -464,7 +584,7 @@
       localStorage.setItem('ghConfig', JSON.stringify(ghConfig));
       updateGhStatus(); closeGhSettings();
       showToast('GitHub 연동 설정이 저장되었습니다.', 'ok');
-    } else showToast('저장소명과 토을 모두 입력하세요.', 'err');
+    } else showToast('저장소명과 토큰을 모두 입력하세요.', 'err');
   }
   function disconnectGh() {
     if (!confirm('GitHub 연동을 해제하시겠습니까?')) return;
@@ -494,17 +614,20 @@
   async function backupToGh() {
     if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
     try {
-      showToast('GitHub에 백업 중... (개인 메모 제외)');
+      showToast('GitHub에 백업 중... (개인 메모·사진 제외)');
       let sha = null;
       try { sha = (await ghApi('GET')).sha; } catch (e) {}
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(sharedOnly(memos), null, 2))));
+      // 사진은 용량 때문에 GitHub 백업 시 제거
+      const light = JSON.parse(JSON.stringify(sharedOnly(memos)));
+      Object.values(light).forEach(arr => arr.forEach(m => { delete m.image; }));
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(light, null, 2))));
       await ghApi('PUT', { message: `메모 백업: ${new Date().toLocaleString('ko-KR')}`, content, ...(sha ? { sha } : {}) });
       showToast('✓ GitHub 백업 완료!', 'ok');
     } catch (e) { showToast('백업 실패: ' + e.message, 'err'); }
   }
   async function restoreFromGh() {
     if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
-    if (!confirm('GitHub에서 복원할까요? (내 개인 메모는 유지됩니다)')) return;
+    if (!confirm('GitHub에서 복원할까요? (내 개인 메모·사진은 유지됩니다)')) return;
     try {
       showToast('GitHub에서 복원 중...');
       const data = await ghApi('GET');
@@ -524,7 +647,12 @@
   function publish(msg) {
     if (client && client.connected) {
       msg.sender = myId;
-      if (msg.type === 'memos') msg.data = sharedOnly(memos);
+      if (msg.type === 'memos') {
+        // 공유 전송 시 개인 메모 제외 + 사진 용량 제거
+        const data = JSON.parse(JSON.stringify(sharedOnly(memos)));
+        Object.values(data).forEach(arr => arr.forEach(m => { delete m.image; }));
+        msg.data = data;
+      }
       client.publish('calmemo/' + SHARE_ROOM, JSON.stringify(msg));
     }
   }
@@ -540,7 +668,17 @@
       if (msg.sender === myId) return;
       if (msg.type === 'memos') {
         const before = countAll(memos);
-        memos = mergeWithPrivate(msg.data);
+        // 내 기존 개인 메모·사진은 보존
+        const merged = sharedOnly(msg.data);
+        Object.keys(memos).forEach(k => {
+          const priv = (memos[k] || []).filter(m => m.private);
+          // 개인이 아닌 메모의 이미지도 유지
+          const imgs = {};
+          (memos[k] || []).forEach(m => { if (m.image) imgs[m.id] = m.image; });
+          if (priv.length) merged[k] = (merged[k] || []).concat(priv);
+          (merged[k] || []).forEach(m => { if (imgs[m.id] && !m.image) m.image = imgs[m.id]; });
+        });
+        memos = merged;
         save(); render(); buildImportant();
         if (selectedKey && editingIdx === null) renderList();
         if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
@@ -581,7 +719,7 @@
     render(); openModal(k);
   };
 
-  /* ---------- 캘린더 렌더링 ---------- */
+  /* ---------- 캘린더 렌더링 + 더블탭 ---------- */
   function render() {
     yearSel.value = view.y; monthSel.value = view.m;
     grid.innerHTML = '';
@@ -597,7 +735,7 @@
 
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.title = isMobile ? '터치하여 메모 열기' : '더블클릭하여 메모 열기';
+      cell.title = '더블클릭(더블탭)하여 메모 열기';
       if (d.getDay() === 0) cell.classList.add('sun');
       if (d.getDay() === 6) cell.classList.add('sat');
       if (d.getMonth() !== view.m) cell.classList.add('other');
@@ -626,8 +764,15 @@
         cell.appendChild(wrap);
       }
 
-      if (isMobile) cell.addEventListener('click', () => openModal(key));
-      else cell.addEventListener('dblclick', () => openModal(key));
+      // 더블클릭/더블탭 공통 처리
+      let lastTap = 0;
+      const handleActivate = () => openModal(key);
+      cell.addEventListener('dblclick', e => { e.preventDefault(); handleActivate(); });
+      cell.addEventListener('touchend', e => {
+        const now = Date.now();
+        if (now - lastTap < 500) { e.preventDefault(); handleActivate(); lastTap = 0; }
+        else lastTap = now;
+      });
       grid.appendChild(cell);
     }
   }
@@ -647,7 +792,8 @@
     editingIdx = null; memoInput.value = '';
     impChk.checked = false; privChk.checked = false;
     timeInput.value = ''; alarmDayChk.checked = false;
-    alarmHoursChk.checked = false; alarmHoursSel.value = '1';
+    alarmTimeChk.checked = false; alarmH.value = 1; alarmM.value = 0;
+    currentImage = ''; imgThumb.src = ''; imgPreview.classList.add('hidden');
     addBtn.textContent = '추가'; cancelEditBtn.style.display = 'none';
   }
   function renderList() {
@@ -656,8 +802,10 @@
     if (!list.length) { memoList.innerHTML = '<div class="empty">저장된 메모가 없습니다.</div>'; return; }
     list.forEach((m, i) => {
       const li = document.createElement('li');
+      const thumb = m.image ? `<img class="thumb" src="${m.image}" />` : '';
       li.innerHTML = `<button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
                       <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
+                      ${thumb}
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
       li.querySelector('.txt').textContent = memoLabel(m);
@@ -667,11 +815,22 @@
         editingIdx = i;
         memoInput.value = m.text; impChk.checked = m.important; privChk.checked = m.private;
         timeInput.value = m.time || ''; alarmDayChk.checked = !!m.alarmDay;
-        alarmHoursChk.checked = m.alarmHours > 0; alarmHoursSel.value = String(m.alarmHours || 1);
+        if (m.alarmMin > 0) {
+          alarmTimeChk.checked = true;
+          alarmH.value = Math.floor(m.alarmMin / 60);
+          alarmM.value = m.alarmMin % 60;
+        } else {
+          alarmTimeChk.checked = false;
+          alarmH.value = 1; alarmM.value = 0;
+        }
+        currentImage = m.image || '';
+        if (currentImage) { imgThumb.src = currentImage; imgPreview.classList.remove('hidden'); }
+        else { imgThumb.src = ''; imgPreview.classList.add('hidden'); }
         addBtn.textContent = '저장'; cancelEditBtn.style.display = 'inline-block';
         memoInput.focus();
       };
       li.querySelector('.del').onclick = () => {
+        if (!confirm('이 메모를 삭제하시겠습니까?')) return;
         memos[selectedKey].splice(i, 1);
         if (!memos[selectedKey].length) delete memos[selectedKey];
         afterChange();
@@ -679,20 +838,48 @@
       memoList.appendChild(li);
     });
   }
+
+  /* ---------- 저장 완료 팝업 ---------- */
+  function showSavedPopup(key, m) {
+    const [y, mo, d] = key.split('-').map(Number);
+    const hol = getHoliday(y, mo - 1, d);
+    const dayName = DAY_NAMES[new Date(y, mo - 1, d).getDay()];
+    const tags = [];
+    if (m.important) tags.push('<span class="red">★ 중요</span>');
+    if (m.private) tags.push('<span class="pur">🔒 개인</span>');
+    if (m.time) tags.push(`<span>⏰ ${m.time}</span>`);
+    if (m.alarmDay) tags.push('<span class="yel">⏰ 하루 전 알람</span>');
+    if (m.alarmMin > 0) tags.push(`<span class="yel">⏰ ${fmtAlarm(m)} 알람</span>`);
+    if (m.image) tags.push('<span>📷 사진 첨부</span>');
+
+    savedInfo.innerHTML = `
+      <div class="date">${y}년 ${mo}월 ${d}일 (${dayName})${hol ? ' · ' + hol : ''}</div>
+      <div class="text">${esc(m.text).replace(/\n/g, '<br>')}</div>
+      ${tags.length ? `<div class="meta">${tags.join('')}</div>` : ''}
+      ${m.image ? `<img src="${m.image}" />` : ''}
+    `;
+    savedModal.classList.remove('hidden');
+  }
+
   function addMemo() {
     const t = memoInput.value.trim();
     if (!t) return;
+    const totalMin = alarmTimeChk.checked
+      ? Math.max(0, (+alarmH.value || 0) * 60 + (+alarmM.value || 0))
+      : 0;
     const obj = {
-      id: (editingIdx === null ? genId() : (memos[selectedKey][editingIdx].id || genId())),
+      id: editingIdx === null ? genId() : (memos[selectedKey][editingIdx].id || genId()),
       text: t, important: impChk.checked, private: privChk.checked,
       time: timeInput.value || '',
       alarmDay: alarmDayChk.checked,
-      alarmHours: alarmHoursChk.checked ? +alarmHoursSel.value : 0
+      alarmMin: totalMin,
+      image: currentImage || ''
     };
     if (editingIdx === null) (memos[selectedKey] ||= []).push(obj);
     else memos[selectedKey][editingIdx] = obj;
-    resetEdit();
     afterChange();
+    showSavedPopup(selectedKey, obj);
+    resetEdit();
     notify('메모가 저장되었습니다.');
   }
   function afterChange() {
@@ -713,14 +900,23 @@
   };
   $('#weekBtn').onclick = openWeekly;
   $('#weekCloseBtn').onclick = () => weekModal.classList.add('hidden');
+  $('#savedCloseBtn').onclick = () => savedModal.classList.add('hidden');
+  savedModal.addEventListener('click', e => { if (e.target === savedModal) savedModal.classList.add('hidden'); });
   weekModal.addEventListener('click', e => { if (e.target === weekModal) weekModal.classList.add('hidden'); });
+
   addBtn.onclick = addMemo;
   cancelEditBtn.onclick = resetEdit;
   $('#closeBtn').onclick = closeModal;
-  memoInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMemo(); });
+
+  memoInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      addMemo();
+    }
+  });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeGhSettings(); weekModal.classList.add('hidden'); }
+    if (e.key === 'Escape') { closeModal(); closeGhSettings(); weekModal.classList.add('hidden'); savedModal.classList.add('hidden'); }
   });
 
   $('#ghSettingsBtn').onclick = openGhSettings;
