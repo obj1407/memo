@@ -9,7 +9,7 @@
   :root{
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
     --border:#242a31; --text:#d7dce2; --dim:#5c6670; --red:#e5484d; --blue:#58a6ff;
-    --green:#3fb950; --purple:#b392f0;
+    --green:#3fb950; --purple:#b392f0; --yellow:#ffd166;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;}
   html,body{height:100%;}
@@ -61,17 +61,21 @@
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;}
   .modal.hidden{display:none;}
-  .modal-box{width:460px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  .modal-box{width:480px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .modal-box h2{font-size:16px;margin-bottom:14px;}
   .input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .input-row input[type=text]{flex:1;min-width:140px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
   .input-row input[type=text]:focus{border-color:var(--blue);}
   .chk{display:flex;align-items:center;gap:5px;font-size:13px;color:#ff8787;cursor:pointer;user-select:none;}
   .chk.priv{color:var(--purple);}
+  .chk.alarm{color:var(--yellow);}
   .chk input{accent-color:currentColor;width:15px;height:15px;cursor:pointer;}
   .input-row button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
   #cancelEditBtn{background:#232930;border:1px solid #333a43 !important;color:var(--text) !important;}
-  .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;}
+  .opt-row{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px;}
+  .opt-row .lbl{color:var(--dim);}
+  .opt-row select{background:#232930;border:1px solid #333a43;color:var(--text);padding:4px 6px;border-radius:6px;font-size:12px;outline:none;}
+  .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;}
   .memo-list li{display:flex;align-items:center;gap:6px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
   .memo-list li .star-btn,.memo-list li .lock-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
   .memo-list li .star-btn.on{color:var(--red);}
@@ -84,6 +88,17 @@
   .empty{color:var(--dim);font-size:12px;margin-top:12px;text-align:center;}
   .close-row{margin-top:16px;text-align:right;}
   .close-row button{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;}
+
+  /* 주간 요약 */
+  .week-body{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;}
+  .week-day h3{font-size:13px;color:var(--blue);margin-bottom:5px;}
+  .week-day h3.sun{color:var(--red);}
+  .week-day h3 .today-tag{color:var(--green);font-size:11px;margin-left:6px;}
+  .week-day h3 .hol{color:var(--red);font-size:11px;margin-left:6px;}
+  .week-day ul{list-style:none;display:flex;flex-direction:column;gap:4px;}
+  .week-day li{font-size:12.5px;color:#9aa4af;padding-left:8px;border-left:2px solid #3a414a;}
+  .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
+  .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
 
   .gh-modal-box{width:500px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .gh-modal-box h2{font-size:17px;margin-bottom:16px;}
@@ -126,6 +141,7 @@
   <select id="monthSel"></select><span class="lbl">월</span>
   <button id="nextBtn">›</button>
   <button id="todayBtn">오늘</button>
+  <button id="weekBtn" title="이번 주 메모 요약">📋 주간</button>
   <input type="date" id="dateJump" />
   <button id="jumpBtn">이동</button>
   <span class="share" title="실시간 공유 상태">
@@ -159,8 +175,26 @@
       <button id="addBtn">추가</button>
       <button id="cancelEditBtn" style="display:none;">취소</button>
     </div>
+    <div class="opt-row">
+      <span class="lbl">시간</span><input type="time" id="timeInput" title="메모 시간(미입력 시 09:00)" />
+      <label class="chk alarm"><input type="checkbox" id="alarmDayChk" />하루 전 알람</label>
+      <label class="chk alarm"><input type="checkbox" id="alarmHoursChk" />시간 전 알람</label>
+      <select id="alarmHoursSel">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        <option value="6">6</option><option value="12">12</option><option value="24">24</option>
+      </select><span class="lbl">시간 전</span>
+    </div>
     <ul class="memo-list" id="memoList"></ul>
     <div class="close-row"><button id="closeBtn">닫기</button></div>
+  </div>
+</div>
+
+<!-- 주간 요약 모달 -->
+<div class="modal hidden" id="weekModal">
+  <div class="modal-box">
+    <h2 id="weekTitle"></h2>
+    <div id="weekBody" class="week-body"></div>
+    <div class="close-row"><button id="weekCloseBtn">닫기</button></div>
   </div>
 </div>
 
@@ -168,17 +202,9 @@
 <div class="modal hidden" id="ghModal">
   <div class="gh-modal-box">
     <h2>🔗 GitHub 연동 설정</h2>
-    <div class="field">
-      <label>GitHub 사용자명 / 저장소명</label>
-      <input type="text" id="ghRepo" placeholder="예: myname/calendar-memos" />
-    </div>
-    <div class="field">
-      <label>저장 경로 (파일명)</label>
-      <input type="text" id="ghPath" placeholder="예: memos.json" value="memos.json" />
-    </div>
-    <div class="field">
-      <label>Personal Access Token (PAT)</label>
-      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
+    <div class="field"><label>GitHub 사용자명 / 저장소명</label><input type="text" id="ghRepo" placeholder="예: myname/calendar-memos" /></div>
+    <div class="field"><label>저장 경로 (파일명)</label><input type="text" id="ghPath" placeholder="예: memos.json" value="memos.json" /></div>
+    <div class="field"><label>Personal Access Token (PAT)</label><input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
       <div class="help">토큰 발급: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Developer settings → Tokens</a> (repo 권한만 체크)</div>
     </div>
     <div class="btn-row">
@@ -201,9 +227,12 @@
   const modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
         impChk = $('#impChk'), privChk = $('#privChk'),
+        timeInput = $('#timeInput'), alarmDayChk = $('#alarmDayChk'),
+        alarmHoursChk = $('#alarmHoursChk'), alarmHoursSel = $('#alarmHoursSel'),
         addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
         yearSel = $('#yearSel'), monthSel = $('#monthSel'), dateJump = $('#dateJump'),
         shareStatus = $('#shareStatus'), bellBtn = $('#bellBtn'),
+        weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
         ghModal = $('#ghModal'), ghRepo = $('#ghRepo'), ghPath = $('#ghPath'), ghToken = $('#ghToken'),
         ghStatus = $('#ghStatus'), ghStatusMsg = $('#ghStatusMsg'),
         toast = $('#toast');
@@ -213,11 +242,13 @@
   let selectedKey = null, editingIdx = null;
   let impList = [], impIdx = 0;
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const countAll = obj => Object.values(obj).reduce((s, a) => s + a.length, 0);
+  const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   function showToast(msg, type='') {
     toast.textContent = msg;
@@ -226,7 +257,7 @@
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
 
-  /* ---------- 알람 (소리 + 시스템 알림) ---------- */
+  /* ---------- 알람(소리+시스템 알림) ---------- */
   let alarmOn = localStorage.getItem('alarmOn') !== '0';
   let audioCtx = null;
   function initAudio() {
@@ -236,8 +267,7 @@
   function beep(freq, dur) {
     if (!audioCtx) return;
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = freq; o.type = 'sine';
-    g.gain.value = 0.08;
+    o.frequency.value = freq; o.type = 'sine'; g.gain.value = 0.08;
     o.connect(g); g.connect(audioCtx.destination);
     o.start();
     g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
@@ -248,9 +278,7 @@
     showToast(msg, 'ok');
     if (!alarmOn) return;
     beep(880, .12); setTimeout(() => beep(1174, .18), 140);
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('캘린더 메모', { body: msg });
-    }
+    if ('Notification' in window && Notification.permission === 'granted') new Notification('캘린더 메모', { body: msg });
   }
   bellBtn.onclick = async () => {
     alarmOn = !alarmOn;
@@ -294,8 +322,8 @@
   if (localStorage.getItem('calMemos') === null) {
     const t = new Date(), yst = new Date(t.getTime() - 864e5);
     memos = {
-      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ text: '회의실 도어 점검 요청', important: false, private: false }],
-      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ text: '오전 7시 네트워크 점검', important: true, private: false }]
+      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ id: genId(), text: '회의실 도어 점검 요청', important: false, private: false, time: '', alarmDay: false, alarmHours: 0 }],
+      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ id: genId(), text: '오전 7시 네트워크 점검', important: true, private: false, time: '07:00', alarmDay: false, alarmHours: 0 }]
     };
     save();
   } else {
@@ -303,12 +331,12 @@
   }
   Object.keys(memos).forEach(k => {
     memos[k] = memos[k].map(x => typeof x === 'string'
-      ? { text: x, important: false, private: false }
-      : { text: x.text, important: !!x.important, private: !!x.private });
+      ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmHours: 0 }
+      : { id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
+          time: x.time || '', alarmDay: !!x.alarmDay, alarmHours: x.alarmHours || 0 });
   });
   function save() { localStorage.setItem('calMemos', JSON.stringify(memos)); }
 
-  /* 개인 메모 제외(공유용) 데이터 */
   function sharedOnly(data) {
     const out = {};
     Object.keys(data || {}).forEach(k => {
@@ -317,7 +345,6 @@
     });
     return out;
   }
-  /* 원격 데이터 + 내 개인 메모 병합 */
   function mergeWithPrivate(remoteShared) {
     const merged = sharedOnly(remoteShared);
     Object.keys(memos).forEach(k => {
@@ -325,6 +352,97 @@
       if (priv.length) merged[k] = (merged[k] || []).concat(priv);
     });
     return merged;
+  }
+  function memoLabel(m) {
+    return (m.private ? '🔒 ' : (m.important ? '★ ' : '')) +
+           (m.time ? `[${m.time}] ` : '') + m.text +
+           ((m.alarmDay || m.alarmHours > 0) ? ' ⏰' : '');
+  }
+
+  /* ---------- 미래 메모 알람 엔진 ---------- */
+  function memoDateTime(key, m) {
+    const [y, mo, d] = key.split('-').map(Number);
+    const [hh, mm] = (m.time || '09:00').split(':').map(Number);
+    return new Date(y, mo - 1, d, hh, mm, 0);
+  }
+  function getAlarmTimes(key, m) {
+    const dt = memoDateTime(key, m);
+    const arr = [];
+    if (m.alarmDay) { const d1 = new Date(dt); d1.setDate(d1.getDate() - 1); arr.push({ t: d1, type: 'day' }); }
+    if (m.alarmHours > 0) arr.push({ t: new Date(dt.getTime() - m.alarmHours * 3600e3), type: 'hours' });
+    return arr;
+  }
+  let lastAlarmCheck = Date.now();
+  function checkAlarms() {
+    const nowT = Date.now();
+    const d = new Date();
+    const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    Object.entries(memos).forEach(([k, list]) => {
+      const [yy, mm, dd] = k.split('-').map(Number);
+      if (new Date(yy, mm - 1, dd).getTime() < todayStart) return;   // 오늘 이후 메모만
+      (list || []).forEach(m => {
+        getAlarmTimes(k, m).forEach(a => {
+          const at = a.t.getTime();
+          if (at > lastAlarmCheck && at <= nowT) {
+            const label = a.type === 'day' ? '하루 전 알람' : `${m.alarmHours}시간 전 알람`;
+            notify(`⏰ ${label} → ${m.text} (${+mm}/${+dd} ${m.time || '09:00'})`);
+          }
+        });
+      });
+    });
+    lastAlarmCheck = nowT;
+  }
+
+  /* ---------- 주간 메모 요약 (월 09:30 / 금 15:30 자동) ---------- */
+  function weekDates() {
+    const d = new Date();
+    const dow = (d.getDay() + 6) % 7;   // 월=0
+    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+    return [...Array(7)].map((_, i) => { const t = new Date(mon); t.setDate(mon.getDate() + i); return t; });
+  }
+  function openWeekly() {
+    const days = weekDates();
+    const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+    let total = 0;
+    weekBody.innerHTML = '';
+    days.forEach(t => {
+      const key = keyOf(t.getFullYear(), t.getMonth(), t.getDate());
+      const list = memos[key] || [];
+      if (!list.length) return;
+      total += list.length;
+      const hol = getHoliday(t.getFullYear(), t.getMonth(), t.getDate());
+      const sec = document.createElement('div');
+      sec.className = 'week-day';
+      sec.innerHTML = `<h3 class="${t.getDay() === 0 ? 'sun' : ''}">${t.getMonth() + 1}/${t.getDate()} (${DAY_NAMES[t.getDay()]})
+        ${hol ? `<span class="hol">${hol}</span>` : ''}${key === todayKey ? '<span class="today-tag">● 오늘</span>' : ''}</h3>`;
+      const ul = document.createElement('ul');
+      list.forEach(m => {
+        const li = document.createElement('li');
+        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '');
+        li.textContent = memoLabel(m);
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+      weekBody.appendChild(sec);
+    });
+    if (!total) weekBody.innerHTML = '<div class="empty">이번 주 메모가 없습니다.</div>';
+    weekTitle.textContent = `📋 주간 메모 정리 (${days[0].getMonth() + 1}/${days[0].getDate()} 월 ~ ${days[6].getMonth() + 1}/${days[6].getDate()} 일) · ${total}건`;
+    weekModal.classList.remove('hidden');
+  }
+  function checkWeekly() {
+    const d = new Date();
+    const hm = d.getHours() * 60 + d.getMinutes();
+    const weekKey = weekDates()[0].toDateString();
+    if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
+      localStorage.setItem('wk_mon_' + weekKey, '1');
+      notify('📋 주간 메모 정리 (월요일 09:30)');
+      openWeekly();
+    }
+    if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
+      localStorage.setItem('wk_fri_' + weekKey, '1');
+      notify('📋 주간 메모 정리 (금요일 15:30)');
+      openWeekly();
+    }
   }
 
   /* ---------- GitHub 연동 ---------- */
@@ -336,9 +454,7 @@
     ghStatusMsg.textContent = ok ? `✓ ${ghConfig.repo}` : '';
   }
   function openGhSettings() {
-    ghRepo.value = ghConfig.repo || '';
-    ghPath.value = ghConfig.path || 'memos.json';
-    ghToken.value = ghConfig.token || '';
+    ghRepo.value = ghConfig.repo || ''; ghPath.value = ghConfig.path || 'memos.json'; ghToken.value = ghConfig.token || '';
     ghModal.classList.remove('hidden');
   }
   function closeGhSettings() { ghModal.classList.add('hidden'); }
@@ -352,8 +468,7 @@
   }
   function disconnectGh() {
     if (!confirm('GitHub 연동을 해제하시겠습니까?')) return;
-    ghConfig = {};
-    localStorage.removeItem('ghConfig');
+    ghConfig = {}; localStorage.removeItem('ghConfig');
     updateGhStatus(); closeGhSettings();
     showToast('GitHub 연동이 해제되었습니다.', 'ok');
   }
@@ -393,8 +508,7 @@
     try {
       showToast('GitHub에서 복원 중...');
       const data = await ghApi('GET');
-      const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content)))) || {};
-      memos = mergeWithPrivate(parsed);
+      memos = mergeWithPrivate(JSON.parse(decodeURIComponent(escape(atob(data.content)))) || {});
       save(); render(); buildImportant();
       showToast('✓ GitHub 복원 완료!', 'ok');
     } catch (e) { showToast('복원 실패: ' + e.message, 'err'); }
@@ -410,7 +524,7 @@
   function publish(msg) {
     if (client && client.connected) {
       msg.sender = myId;
-      if (msg.type === 'memos') msg.data = sharedOnly(memos);   // 개인 메모는 전송 안 함
+      if (msg.type === 'memos') msg.data = sharedOnly(memos);
       client.publish('calmemo/' + SHARE_ROOM, JSON.stringify(msg));
     }
   }
@@ -429,8 +543,7 @@
         memos = mergeWithPrivate(msg.data);
         save(); render(); buildImportant();
         if (selectedKey && editingIdx === null) renderList();
-        const after = countAll(memos);
-        if (after > before) notify('📢 새 공유 메모가 도착했습니다.');
+        if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
         else showToast('공유 메모가 업데이트되었습니다.', 'ok');
       } else if (msg.type === 'sync-request') {
         setTimeout(() => publish({ type: 'memos' }), Math.random() * 300);
@@ -472,7 +585,6 @@
   function render() {
     yearSel.value = view.y; monthSel.value = view.m;
     grid.innerHTML = '';
-
     const startOffset = new Date(view.y, view.m, 1).getDay();
     const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
     const total = Math.ceil((startOffset + daysInMonth) / 7) * 7;
@@ -502,7 +614,7 @@
         list.slice(0, 4).forEach(m => {
           const line = document.createElement('div');
           line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '');
-          line.textContent = (m.private ? '🔒 ' : (m.important ? '★ ' : '')) + m.text;
+          line.textContent = memoLabel(m);
           wrap.appendChild(line);
         });
         if (list.length > 4) {
@@ -534,6 +646,8 @@
   function resetEdit() {
     editingIdx = null; memoInput.value = '';
     impChk.checked = false; privChk.checked = false;
+    timeInput.value = ''; alarmDayChk.checked = false;
+    alarmHoursChk.checked = false; alarmHoursSel.value = '1';
     addBtn.textContent = '추가'; cancelEditBtn.style.display = 'none';
   }
   function renderList() {
@@ -546,12 +660,14 @@
                       <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
-      li.querySelector('.txt').textContent = m.text;
+      li.querySelector('.txt').textContent = memoLabel(m);
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; afterChange(); };
       li.querySelector('.lock-btn').onclick = () => { m.private = !m.private; afterChange(); };
       li.querySelector('.act').onclick = () => {
         editingIdx = i;
         memoInput.value = m.text; impChk.checked = m.important; privChk.checked = m.private;
+        timeInput.value = m.time || ''; alarmDayChk.checked = !!m.alarmDay;
+        alarmHoursChk.checked = m.alarmHours > 0; alarmHoursSel.value = String(m.alarmHours || 1);
         addBtn.textContent = '저장'; cancelEditBtn.style.display = 'inline-block';
         memoInput.focus();
       };
@@ -566,11 +682,15 @@
   function addMemo() {
     const t = memoInput.value.trim();
     if (!t) return;
-    if (editingIdx === null) {
-      (memos[selectedKey] ||= []).push({ text: t, important: impChk.checked, private: privChk.checked });
-    } else {
-      memos[selectedKey][editingIdx] = { text: t, important: impChk.checked, private: privChk.checked };
-    }
+    const obj = {
+      id: (editingIdx === null ? genId() : (memos[selectedKey][editingIdx].id || genId())),
+      text: t, important: impChk.checked, private: privChk.checked,
+      time: timeInput.value || '',
+      alarmDay: alarmDayChk.checked,
+      alarmHours: alarmHoursChk.checked ? +alarmHoursSel.value : 0
+    };
+    if (editingIdx === null) (memos[selectedKey] ||= []).push(obj);
+    else memos[selectedKey][editingIdx] = obj;
     resetEdit();
     afterChange();
     notify('메모가 저장되었습니다.');
@@ -591,12 +711,17 @@
     const [y, m] = dateJump.value.split('-').map(Number);
     view = { y, m: m - 1 }; render();
   };
+  $('#weekBtn').onclick = openWeekly;
+  $('#weekCloseBtn').onclick = () => weekModal.classList.add('hidden');
+  weekModal.addEventListener('click', e => { if (e.target === weekModal) weekModal.classList.add('hidden'); });
   addBtn.onclick = addMemo;
   cancelEditBtn.onclick = resetEdit;
   $('#closeBtn').onclick = closeModal;
   memoInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMemo(); });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeGhSettings(); } });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeGhSettings(); weekModal.classList.add('hidden'); }
+  });
 
   $('#ghSettingsBtn').onclick = openGhSettings;
   $('#ghSaveBtn').onclick = saveGhSettings;
@@ -606,6 +731,9 @@
   $('#ghBackupBtn').onclick = backupToGh;
   $('#ghRestoreBtn').onclick = restoreFromGh;
   ghModal.addEventListener('click', e => { if (e.target === ghModal) closeGhSettings(); });
+
+  /* ---------- 메인 타이머 (15초마다) ---------- */
+  setInterval(() => { checkAlarms(); checkWeekly(); }, 15000);
 
   updateBell();
   updateGhStatus();
