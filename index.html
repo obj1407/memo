@@ -224,7 +224,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8자리 · 계정 관리는 관리자만 가능<br>
-      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v2.0</b></div>
+      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v2.1</b></div>
   </div>
 </div>
 
@@ -335,7 +335,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '2.0';
+  const APP_VER = '2.1';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -468,7 +468,7 @@
       save(); render();
       if (selectedKey === key && editingIdx === null) renderList();
       buildImportant();
-      publish({ type: 'memos' });
+      publishMemos();
       showToast('🗑 사진이 삭제되었습니다.', 'ok');
     }
   }
@@ -678,7 +678,7 @@
           });
         }
         save(); render(); buildImportant();
-        publish({ type: 'memos' });
+        publishMemos();
         showToast('백업을 가져왔습니다.', 'ok');
       } catch (err) { alert('가져오기 실패: 올바른 백업 파일이 아닙니다.'); }
       importFile.value = '';
@@ -756,17 +756,19 @@
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
   /* =====================================================
-     ★ 실시간 공유 - 브로커 2중 병렬 + 중복 제거 (v2.0)
+     ★ 실시간 공유 v2.1 : MQTT 2중 + ntfy(HTTPS) 폴백
      ===================================================== */
   const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
   const myId = Math.random().toString(36).slice(2, 10);
   let clients = [], clientTeam = null, preAccounts = null;
+  let es = null, esTeam = null;
   const seenMids = new Set();
+  const chunkBuf = {};
 
   function updateStatus() {
     const n = clients.filter(c => c.connected).length;
-    shareStatus.className = 'dot' + (n > 0 ? ' on' : '');
-    shareStatus.title = n > 0 ? `실시간 공유 연결됨 (브로커 ${n}개)` : '연결 안 됨';
+    shareStatus.className = 'dot' + ((n > 0 || es) ? ' on' : '');
+    shareStatus.title = `MQTT ${n}/2 · ntfy ${es ? 'ON' : 'OFF'}`;
   }
   function sharedOnly(data) {
     const out = {};
@@ -776,39 +778,101 @@
     });
     return out;
   }
-  function publish(msg) {
-    if (!session || clientTeam !== TEAM) return;
-    msg.sender = myId; msg.mid = genId(); msg.v = APP_VER;
-    if (msg.type === 'memos') {
-      let data = sharedOnly(memos);
-      if (JSON.stringify({ ...msg, data }).length > 500000) {
-        data = JSON.parse(JSON.stringify(data));
-        Object.values(data).forEach(arr => arr.forEach(m => { delete m.image; }));
-        showToast('사진 데이터가 커서 텍스트만 공유되었습니다.', 'err');
-      }
-      msg.data = data;
+
+  /* --- ntfy(HTTPS) 채널 --- */
+  function connectNtfy(team) {
+    if (esTeam === team && es) return;
+    if (es) { try { es.close(); } catch (e) {} es = null; }
+    esTeam = team;
+    try {
+      es = new EventSource('https://ntfy.sh/calmemo-' + team + '/sse');
+      es.onopen = () => {
+        updateStatus();
+        sendShare(team, 'accounts', { type: 'sync-request' });
+        sendShare(team, 'memos', { type: 'sync-request' });
+      };
+      es.onmessage = e => {
+        try {
+          const evt = JSON.parse(e.data);
+          if (evt.event === 'message' && typeof evt.message === 'string') handleNtfyBody(evt.message);
+        } catch (err) {}
+      };
+      es.onerror = () => updateStatus();
+    } catch (e) { es = null; }
+  }
+  function ntfyPublish(team, raw, obj) {
+    const url = 'https://ntfy.sh/calmemo-' + team;
+    obj.kind = obj.kind || 'memos';
+    let s = JSON.stringify(obj);
+    if (s.length > 20000 && obj.data) {
+      const stripped = JSON.parse(s);
+      Object.values(stripped.data).forEach(arr => arr.forEach(x => { delete x.image; }));
+      s = JSON.stringify(stripped);
     }
-    const raw = JSON.stringify(msg);
+    if (s.length <= 3500) { fetch(url, { method: 'POST', body: s }).catch(() => {}); return; }
+    const size = 3000, total = Math.ceil(s.length / size);
+    if (total > 40) return;
+    for (let i = 0; i < total; i++) {
+      fetch(url, { method: 'POST', body: JSON.stringify({ sender: myId, mid: obj.mid, kind: obj.kind, chunk: i, total, data: s.slice(i * size, (i + 1) * size) }) }).catch(() => {});
+    }
+  }
+  function handleNtfyBody(body) {
+    let m; try { m = JSON.parse(body); } catch (e) { return; }
+    if (!m || m.sender === myId) return;
+    if (m.chunk !== undefined) {
+      const b = chunkBuf[m.mid] || (chunkBuf[m.mid] = { parts: new Array(m.total), left: m.total });
+      if (b.parts[m.chunk] === undefined) { b.parts[m.chunk] = m.data; b.left--; }
+      setTimeout(() => { if (chunkBuf[m.mid] === b && b.left > 0) delete chunkBuf[m.mid]; }, 30000);
+      if (b.left <= 0) {
+        delete chunkBuf[m.mid];
+        let full; try { full = JSON.parse(b.parts.join('')); } catch (e) { return; }
+        handleShareMsg(full.kind, esTeam, full);
+      }
+      return;
+    }
+    handleShareMsg(m.kind, esTeam, m);
+  }
+
+  /* --- 통합 송신 --- */
+  function sendShare(team, kind, obj) {
+    obj.sender = myId;
+    obj.mid = obj.mid || genId();
+    obj.v = APP_VER;
+    obj.kind = kind;
+    const raw = JSON.stringify(obj);
     let sent = 0;
-    clients.forEach(c => { if (c.connected) { c.publish(`calmemo/${TEAM}/memos`, raw); sent++; } });
-    console.log('[share] send', msg.type, 'via', sent, 'broker(s)');
+    clients.forEach(c => { if (c.connected && clientTeam === team) { c.publish(`calmemo/${team}/${kind}`, raw); sent++; } });
+    ntfyPublish(team, raw, obj);
+    console.log('[share] send', obj.type, '| mqtt:', sent, '| ntfy:1');
+  }
+  function publishMemos() {
+    if (!session || clientTeam !== TEAM) return;
+    const msg = { type: 'memos', data: sharedOnly(memos) };
+    if (JSON.stringify(msg).length > 500000) {
+      const data = JSON.parse(JSON.stringify(msg.data));
+      Object.values(data).forEach(arr => arr.forEach(m => { delete m.image; }));
+      msg.data = data;
+      showToast('사진 데이터가 커서 텍스트만 공유되었습니다.', 'err');
+    }
+    sendShare(TEAM, 'memos', msg);
   }
   function publishAccounts() {
     if (!session || clientTeam !== TEAM) return;
-    const raw = JSON.stringify({ sender: myId, mid: genId(), type: 'accounts', data: accounts });
-    clients.forEach(c => { if (c.connected) c.publish(`calmemo/${TEAM}/accounts`, raw); });
+    sendShare(TEAM, 'accounts', { type: 'accounts', data: accounts });
   }
   function requestSyncOn(c, team) {
     c.subscribe([`calmemo/${team}/accounts`, `calmemo/${team}/memos`]);
-    c.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request' }));
-    c.publish(`calmemo/${team}/memos`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request' }));
+    c.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request', kind: 'accounts' }));
+    c.publish(`calmemo/${team}/memos`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request', kind: 'memos' }));
   }
   function requestSyncAll(team) {
     clients.forEach(c => { if (c.connected) requestSyncOn(c, team); });
+    sendShare(team, 'accounts', { type: 'sync-request' });
+    sendShare(team, 'memos', { type: 'sync-request' });
   }
   function connectTeam(team) {
-    if (typeof mqtt === 'undefined') return;
-    if (clientTeam === team && clients.length) return;
+    if (typeof mqtt === 'undefined') { connectNtfy(team); return; }
+    if (clientTeam === team && clients.length) { connectNtfy(team); return; }
     clients.forEach(c => { try { c.end(true); } catch (e) {} });
     clients = [];
     clientTeam = team;
@@ -817,25 +881,28 @@
     BROKERS.forEach((url, idx) => {
       const c = mqtt.connect(url, { clientId: `calmemo-${myId}-${idx}`, keepalive: 30, reconnectPeriod: 5000, clean: true });
       clients.push(c);
-      c.on('connect', () => { console.log('[share] connected:', url); requestSyncOn(c, team); updateStatus(); });
+      c.on('connect', () => { console.log('[share] MQTT connected:', url); requestSyncOn(c, team); updateStatus(); });
       c.on('reconnect', updateStatus);
       c.on('close', updateStatus);
       c.on('offline', updateStatus);
       c.on('error', () => {});
       c.on('message', onShareMessage);
     });
+    connectNtfy(team);
   }
   function onShareMessage(topic, payload) {
     let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
-    if (msg.sender === myId) return;
+    const parts = topic.split('/');
+    handleShareMsg(parts[2], parts[1], msg);
+  }
+  function handleShareMsg(kind, tTeam, msg) {
+    if (!msg || msg.sender === myId) return;
     if (msg.mid) {
       if (seenMids.has(msg.mid)) return;
       seenMids.add(msg.mid);
       if (seenMids.size > 1000) seenMids.clear();
     }
-    console.log('[share] recv', msg.type, '|', topic);
-    const parts = topic.split('/');
-    const tTeam = parts[1], kind = parts[2];
+    console.log('[share] recv', msg.type, '|', kind, '|', tTeam);
 
     if (kind === 'accounts') {
       if (msg.type === 'accounts' && msg.data && msg.data[ADMIN]) {
@@ -849,8 +916,7 @@
           if (!accounts[session.user]) doLogout('계정이 삭제되어 로그아웃되었습니다.');
         }
       } else if (msg.type === 'sync-request') {
-        const raw = JSON.stringify({ sender: myId, mid: genId(), type: 'accounts', data: loadAccountsLocal(tTeam) });
-        clients.forEach(c => { if (c.connected) c.publish(`calmemo/${tTeam}/accounts`, raw); });
+        sendShare(tTeam, 'accounts', { type: 'accounts', data: loadAccountsLocal(tTeam) });
       }
     }
     else if (kind === 'memos') {
@@ -871,7 +937,10 @@
         if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
         else showToast('공유 메모가 업데이트되었습니다.', 'ok');
       } else if (msg.type === 'sync-request') {
-        setTimeout(() => { publish({ type: 'memos' }); publishAccounts(); }, Math.random() * 300);
+        setTimeout(() => {
+          publishMemos();
+          if (session) sendShare(TEAM, 'accounts', { type: 'accounts', data: accounts });
+        }, Math.random() * 300);
       }
     }
   }
@@ -883,7 +952,7 @@
   syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
   window.addEventListener('load', () => {
     const wait = setInterval(() => {
-      if (typeof mqtt !== 'undefined') {
+      if (typeof mqtt !== 'undefined' || window.__mqttFailed) {
         clearInterval(wait);
         connectTeam(teamInput.value.trim() || 'our-team');
       }
@@ -1171,7 +1240,7 @@
   }
   function afterChange() {
     save(); renderList(); render(); buildImportant();
-    publish({ type: 'memos' });
+    publishMemos();
   }
 
   $('#prevBtn').onclick  = () => { view.m--; if (view.m < 0)  { view.m = 11; view.y--; } render(); };
