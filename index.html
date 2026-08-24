@@ -38,9 +38,9 @@
   .dot{width:10px;height:10px;border-radius:50%;background:#5c6670;}
   .dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
   .user-badge{font-size:12px;color:var(--blue);background:#12161b;border:1px solid var(--border);border-radius:6px;padding:5px 10px;}
-  .storage{font-size:12px;color:var(--dim);margin-left:10px;padding-left:12px;border-left:1px solid var(--border);}
+  .storage{font-size:12px;color:var(--dim);margin-left:10px;padding-left:12px;border-left:1px solid var(--border);cursor:pointer;}
   .storage.mid{color:var(--yellow);}
-  .storage.warn{color:var(--red);}
+  .storage.warn{color:var(--red);font-weight:600;}
   .ticker{flex:1;min-width:200px;margin-left:12px;height:34px;display:flex;align-items:center;justify-content:center;gap:8px;
           background:#12161b;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 14px;}
@@ -140,6 +140,21 @@
   .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
 
+  /* 사진 정리 팝업 */
+  .cleanup-box{width:560px;max-width:92vw;background:#1b2027;border:1px solid #4a3434;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
+  .cleanup-box h2{font-size:16px;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .cleanup-box .desc{font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+  .cleanup-box .desc b{color:var(--yellow);}
+  .cleanup-list{list-style:none;max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:8px;}
+  .cleanup-item{display:flex;align-items:center;gap:10px;background:#232930;border:1px solid #333a43;border-radius:8px;padding:10px;}
+  .cleanup-item .thumb{width:70px;height:70px;border-radius:6px;object-fit:cover;border:1px solid #333a43;cursor:zoom-in;flex-shrink:0;}
+  .cleanup-item .info{flex:1;min-width:0;}
+  .cleanup-item .info .d{font-size:12px;color:var(--blue);margin-bottom:3px;}
+  .cleanup-item .info .t{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cleanup-item .info .sz{font-size:11px;color:var(--dim);margin-top:3px;}
+  .cleanup-item .del{background:var(--red);border:none;color:#fff;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;}
+  .cleanup-item .del:hover{background:#c8363b;}
+
   .login-wrap{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;}
   .login-box{width:380px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:12px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .login-box h1{font-size:20px;text-align:center;margin-bottom:22px;}
@@ -184,6 +199,7 @@
     .holiday { font-size: 9px; margin-top: 0; }
     .count { font-size: 10px; top: 4px; right: 4px; }
     .memos { display: none; }
+    .cleanup-item .thumb { width: 55px; height: 55px; }
   }
 </style>
 </head>
@@ -226,12 +242,12 @@
   <button id="jumpBtn">이동</button>
   <span class="share" title="실시간 공유 상태">
     <span id="shareStatus" class="dot"></span><span class="lbl">실시간 공유</span>
-    <button id="bellBtn" title="알람 켜기/끄기">🔔</button>
+    <button id="bellBtn" title="알림 켜기/끄기">🔔</button>
   </span>
   <span class="user-badge" id="userBadge"></span>
   <button id="acctBtn" style="display:none;">👥 계정</button>
   <button id="logoutBtn" title="로그아웃">🚪</button>
-  <span class="storage" id="storageInfo" title="브라우저 저장소 사용량"></span>
+  <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기"></span>
   <div class="ticker" id="ticker" title="더블클릭 시 해당 날짜로 이동"></div>
 </div>
 
@@ -304,6 +320,19 @@
   </div>
 </div>
 
+<!-- 사진 정리 팝업 -->
+<div class="modal hidden" id="cleanupModal">
+  <div class="cleanup-box">
+    <h2>⚠️ 저장소 용량이 부족합니다</h2>
+    <div class="desc">
+      현재 저장소가 <b id="cleanupPct"></b> 사용 중입니다.<br>
+      아래 사진들을 삭제하여 공간을 확보하세요. <b>텍스트 메모는 유지</b>됩니다.
+    </div>
+    <ul class="cleanup-list" id="cleanupList"></ul>
+    <div class="close-row"><button id="cleanupCloseBtn">나중에</button></div>
+  </div>
+</div>
+
 <div class="lightbox hidden" id="lightbox"><img id="lightboxImg" /></div>
 
 <div class="toast" id="toast"></div>
@@ -330,6 +359,7 @@
         imgThumb = $('#imgThumb'), imgRemoveBtn = $('#imgRemoveBtn'),
         savedModal = $('#savedModal'), savedInfo = $('#savedInfo'),
         weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
+        cleanupModal = $('#cleanupModal'), cleanupList = $('#cleanupList'), cleanupPct = $('#cleanupPct'),
         lightbox = $('#lightbox'), lightboxImg = $('#lightboxImg'),
         storageInfo = $('#storageInfo'),
         toast = $('#toast');
@@ -340,6 +370,7 @@
   let impList = [], impIdx = 0;
   let currentImage = '';
   let TEAM = null, session = null, accounts = {};
+  let cleanupManuallyOpened = false;   // 사용자가 직접 연 건지
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
@@ -360,7 +391,9 @@
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
 
+  /* ---------- 저장소 사용량 ---------- */
   const QUOTA = 5 * 1024 * 1024;
+  let lastPct = 0;
   function updateStorage() {
     const json = localStorage.getItem(memKey()) || '';
     const used = json.length * 2;
@@ -368,17 +401,123 @@
     const remainMB = Math.max(0, (QUOTA - used) / 1048576);
     storageInfo.textContent = `💾 ${pct.toFixed(1)}% 사용 · ${remainMB.toFixed(1)}MB 남음`;
     storageInfo.className = 'storage' + (pct > 80 ? ' warn' : (pct > 50 ? ' mid' : ''));
+    
+    const crossed80 = lastPct < 80 && pct >= 80;
+    lastPct = pct;
+    
+    /* 80% 초과 시 자동 팝업 (수동으로 열었던 적이 없을 때만) */
+    if (pct >= 80 && session && !cleanupManuallyOpened && cleanupModal.classList.contains('hidden')) {
+      openCleanup(true);
+    }
+    /* 80% 아래로 내려오면 수동 플래그 초기화 → 다음에 또 자동으로 뜰 수 있게 */
+    if (pct < 80) {
+      cleanupManuallyOpened = false;
+      if (!cleanupModal.classList.contains('hidden')) {
+        cleanupModal.classList.add('hidden');
+        showToast('✓ 용량이 충분해졌습니다.', 'ok');
+      }
+    }
+    /* 팝업 열려 있으면 리스트 갱신 */
+    if (!cleanupModal.classList.contains('hidden')) {
+      renderCleanupList();
+    }
   }
 
+  /* ---------- 사진 정리 팝업 ---------- */
+  function openCleanup(auto) {
+    if (!session) return;
+    if (!auto) cleanupManuallyOpened = true;
+    renderCleanupList();
+    cleanupModal.classList.remove('hidden');
+  }
+  function renderCleanupList() {
+    const items = [];
+    Object.entries(memos).forEach(([k, list]) => {
+      list.forEach(m => {
+        if (m.image) {
+          /* base64 크기 근사: base64 문자열 길이 ≈ 실제 바이트 * 4/3 */
+          const sizeBytes = Math.round(m.image.length * 0.75);
+          items.push({ key: k, id: m.id, memo: m, sizeBytes, date: k });
+        }
+      });
+    });
+    /* 오래된 날짜 → 큰 용량 순 */
+    items.sort((a, b) => a.date.localeCompare(b.date) || (b.sizeBytes - a.sizeBytes));
+
+    const json = localStorage.getItem(memKey()) || '';
+    const used = json.length * 2;
+    const pct = Math.min(100, (used / QUOTA) * 100);
+    cleanupPct.textContent = pct.toFixed(1) + '%';
+
+    cleanupList.innerHTML = '';
+    if (!items.length) {
+      cleanupList.innerHTML = '<div class="empty">삭제할 사진이 없습니다.</div>';
+      return;
+    }
+    items.forEach(it => {
+      const li = document.createElement('li');
+      li.className = 'cleanup-item';
+      const [y, mo, d] = it.key.split('-').map(Number);
+      const dateObj = new Date(y, mo - 1, d);
+      const dayName = DAY_NAMES[dateObj.getDay()];
+      const sizeStr = it.sizeBytes >= 1024
+        ? (it.sizeBytes / 1024).toFixed(1) + ' KB'
+        : it.sizeBytes + ' B';
+      const shortText = it.memo.text.length > 30 ? it.memo.text.slice(0, 30) + '…' : it.memo.text;
+      li.innerHTML = `
+        <img class="thumb" src="${it.memo.image}" />
+        <div class="info">
+          <div class="d">${y}.${pad(mo)}.${pad(d)} (${dayName})</div>
+          <div class="t">${esc(shortText)}</div>
+          <div class="sz">📷 ${sizeStr}</div>
+        </div>
+        <button class="del">🗑 삭제</button>
+      `;
+      li.querySelector('.thumb').onclick = () => openLightbox(it.memo.image);
+      li.querySelector('.del').onclick = () => {
+        if (!confirm('이 사진만 삭제하시겠습니까?\n(텍스트 메모는 유지됩니다)')) return;
+        deleteImageFromMemo(it.key, it.id);
+      };
+      cleanupList.appendChild(li);
+    });
+  }
+  function deleteImageFromMemo(key, id) {
+    const list = memos[key] || [];
+    const m = list.find(x => x.id === id);
+    if (m) {
+      m.image = '';
+      save();
+      render();
+      if (selectedKey === key && editingIdx === null) renderList();
+      buildImportant();
+      publish({ type: 'memos' });
+      showToast('🗑 사진이 삭제되었습니다.', 'ok');
+    }
+  }
+  $('#cleanupCloseBtn').onclick = () => {
+    cleanupModal.classList.add('hidden');
+    cleanupManuallyOpened = true;   // 나중에 버튼 누르면 더 이상 자동 안 열림
+  };
+  cleanupModal.addEventListener('click', e => {
+    if (e.target === cleanupModal) {
+      cleanupModal.classList.add('hidden');
+      cleanupManuallyOpened = true;
+    }
+  });
+  storageInfo.onclick = () => { if (session) openCleanup(false); };
+
+  /* ---------- 뒤로가기 ---------- */
   function anyModalOpen() {
     return !modal.classList.contains('hidden') ||
            !savedModal.classList.contains('hidden') ||
            !weekModal.classList.contains('hidden') ||
            !acctModal.classList.contains('hidden') ||
+           !cleanupModal.classList.contains('hidden') ||
            !lightbox.classList.contains('hidden');
   }
   function closeTopModal() {
     if (!lightbox.classList.contains('hidden')) { lightbox.classList.add('hidden'); lightboxImg.src = ''; }
+    else if (!cleanupModal.classList.contains('hidden')) { cleanupModal.classList.add('hidden'); cleanupManuallyOpened = true; }
     else if (!savedModal.classList.contains('hidden')) savedModal.classList.add('hidden');
     else if (!acctModal.classList.contains('hidden')) acctModal.classList.add('hidden');
     else if (!modal.classList.contains('hidden')) closeModal();
@@ -403,7 +542,7 @@
   function openLightbox(src) { lightboxImg.src = src; lightbox.classList.remove('hidden'); }
   lightbox.onclick = () => { lightbox.classList.add('hidden'); lightboxImg.src = ''; };
 
-  /* ---------- 알람 소리 (안전한 초기화) ---------- */
+  /* ---------- 알람 소리 ---------- */
   let alarmOn = localStorage.getItem('alarmOn') !== '0';
   let audioCtx = null;
   function ensureAudio() {
@@ -435,17 +574,16 @@
     if ('Notification' in window && Notification.permission === 'granted') new Notification('캘린더 메모', { body: msg });
   }
   bellBtn.onclick = async () => {
-    ensureAudio();   // 사용자 제스처에서 초기화
+    ensureAudio();
     alarmOn = !alarmOn;
     localStorage.setItem('alarmOn', alarmOn ? '1' : '0');
     updateBell();
     if (alarmOn) {
       if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
-      beep(880, .15);   // 알림음으로 확인
+      beep(880, .15);
       notify('알람이 켜졌습니다.');
     } else showToast('알람이 꺼졌습니다.');
   };
-  /* 버튼/텍스트 등 모든 사용자 제스처에서 오디오 초기화 준비 */
   document.addEventListener('click', ensureAudio, { passive: true });
   document.addEventListener('touchstart', ensureAudio, { passive: true });
   document.addEventListener('keydown', ensureAudio, { passive: true });
@@ -498,8 +636,14 @@
     memos = normalizeMemos(parsed);
   }
   function save() {
-    try { localStorage.setItem(memKey(), JSON.stringify(memos)); updateStorage(); }
-    catch (e) { showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err'); updateStorage(); }
+    try {
+      localStorage.setItem(memKey(), JSON.stringify(memos));
+      updateStorage();
+    } catch (e) {
+      showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err');
+      updateStorage();
+      openCleanup(false);
+    }
   }
   function migrateLegacy() {
     if (countAll(memos) > 0) return;
@@ -562,7 +706,7 @@
     r.readAsText(f);
   };
 
-  /* ---------- 계정 관리 ---------- */
+  /* ---------- 계정 ---------- */
   function loadAccountsLocal(team) {
     let acc = null;
     try { acc = JSON.parse(localStorage.getItem('accounts_' + team)); } catch (e) {}
@@ -638,12 +782,10 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 로그인 (백그라운드 계정 동기화 포함) ---------- */
   const myId = Math.random().toString(36).slice(2, 10);
   let client = null;
-  let preConnect = null;   // 로그인 전 계정 동기화용
+  let preConnect = null;
   let preAccounts = null;
-  let preSyncTimer = null;
 
   function setStatus(on) {
     shareStatus.className = 'dot' + (on ? ' on' : '');
@@ -674,7 +816,6 @@
     }
   }
 
-  /* ★ 로그인 전 계정 목록을 받아오기 위한 사전 연결 */
   function startPreConnect(team) {
     if (typeof mqtt === 'undefined') return;
     if (preConnect) { try { preConnect.end(true); } catch(e){} preConnect = null; }
@@ -703,7 +844,6 @@
     syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
     startPreConnect(t);
   });
-  /* 초기 실행 */
   syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
   window.addEventListener('load', () => {
     const waitForMqttInit = setInterval(() => {
@@ -722,12 +862,10 @@
     if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
     
     TEAM = team;
-    /* 1차: 로컬 캐시된 계정으로 빠른 검증 */
     let localAcc = loadAccountsLocal(team);
     if (localAcc[id] && localAcc[id].pw === pw) {
       accounts = localAcc;
     } else {
-      /* 2차: MQTT로 받은 최신 계정으로 재검증 (최대 2초 대기) */
       loginBtn.disabled = true;
       loginBtn.textContent = '계정 확인 중...';
       syncIndicator.textContent = '🔄 최신 계정 확인 중...';
@@ -762,7 +900,6 @@
     migrateLegacy();
     updateStorage(); render(); buildImportant();
     
-    /* 사전 연결을 메인 연결로 승격 */
     if (preConnect) {
       client = preConnect;
       preConnect = null;
@@ -835,13 +972,13 @@
     memos = {};
     closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
     acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
+    cleanupModal.classList.add('hidden'); cleanupManuallyOpened = false;
     setStatus(false);
     loginWrap.style.display = 'flex';
     pwInput.value = '';
     loginBtn.disabled = false;
     loginBtn.textContent = '로그인';
     if (msg) setTimeout(() => alert(msg), 100);
-    /* 로그아웃 후에도 새 팀 계정 동기화 시작 */
     startPreConnect(teamInput.value.trim() || 'our-team');
     syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
   }
@@ -860,11 +997,9 @@
     }
   }, 5000);
 
-  /* ---------- 연/월 ---------- */
   for (let y = 1950; y <= 2050; y++) yearSel.add(new Option(y + '년', y));
   for (let m = 1; m <= 12; m++) monthSel.add(new Option(m + '월', m - 1));
 
-  /* ---------- 중요 티커 ---------- */
   function buildImportant() {
     impList = [];
     Object.keys(memos).sort().forEach(k => {
@@ -888,7 +1023,6 @@
     render(); openModal(k);
   };
 
-  /* ---------- 캘린더 ---------- */
   function render() {
     yearSel.value = view.y; monthSel.value = view.m;
     grid.innerHTML = '';
@@ -944,7 +1078,6 @@
     }
   }
 
-  /* ---------- 모달 ---------- */
   function fmtAlarm(m) {
     if (!m.alarmMin) return '';
     const h = Math.floor(m.alarmMin / 60), mm = m.alarmMin % 60;
@@ -1065,7 +1198,6 @@
     publish({ type: 'memos' });
   }
 
-  /* ---------- 이벤트 ---------- */
   $('#prevBtn').onclick  = () => { view.m--; if (view.m < 0)  { view.m = 11; view.y--; } render(); };
   $('#nextBtn').onclick  = () => { view.m++; if (view.m > 11) { view.m = 0;  view.y++; } render(); };
   $('#todayBtn').onclick = () => { view = { y: now.getFullYear(), m: now.getMonth() }; render(); };
@@ -1092,7 +1224,6 @@
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
 
-  /* ---------- 알람 엔진 + 주간 요약 ---------- */
   function memoDateTime(key, m) {
     const [y, mo, d] = key.split('-').map(Number);
     const [hh, mm] = (m.time || '09:00').split(':').map(Number);
@@ -1179,7 +1310,6 @@
   }
   setInterval(() => { checkAlarms(); checkWeekly(); }, 15000);
 
-  /* ---------- 시작 ---------- */
   updateBell();
   const savedSession = sessionStorage.getItem('session');
   if (savedSession) {
