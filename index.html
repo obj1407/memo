@@ -9,7 +9,7 @@
   :root{
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
     --border:#242a31; --text:#d7dce2; --dim:#5c6670; --red:#e5484d; --blue:#58a6ff;
-    --green:#3fb950;
+    --green:#3fb950; --purple:#b392f0;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;}
   html,body{height:100%;}
@@ -18,7 +18,6 @@
   .topbar{display:flex;align-items:center;gap:8px;padding:10px 20px;background:#171b21;border-bottom:1px solid var(--border);flex:0 0 auto;flex-wrap:wrap;}
   .topbar button{background:#232930;border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;}
   .topbar button:hover{background:#2d343c;}
-  .topbar button:disabled{opacity:0.5;cursor:not-allowed;}
   .topbar select,.topbar input{background:#232930;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-size:13px;outline:none;color-scheme:dark;}
   .topbar .lbl{font-size:13px;color:var(--dim);}
   .share{display:flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border);}
@@ -57,25 +56,29 @@
   .memo-line{font-size:11.5px;color:#9aa4af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
              border-left:2px solid #3a414a;padding-left:6px;}
   .memo-line.imp{color:#ff8787;border-left-color:var(--red);}
+  .memo-line.priv{color:var(--purple);border-left-color:#7e57c2;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;}
   .modal.hidden{display:none;}
-  .modal-box{width:440px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  .modal-box{width:460px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .modal-box h2{font-size:16px;margin-bottom:14px;}
   .input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .input-row input[type=text]{flex:1;min-width:150px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
+  .input-row input[type=text]{flex:1;min-width:140px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
   .input-row input[type=text]:focus{border-color:var(--blue);}
   .chk{display:flex;align-items:center;gap:5px;font-size:13px;color:#ff8787;cursor:pointer;user-select:none;}
-  .chk input{accent-color:var(--red);width:15px;height:15px;cursor:pointer;}
+  .chk.priv{color:var(--purple);}
+  .chk input{accent-color:currentColor;width:15px;height:15px;cursor:pointer;}
   .input-row button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
   #cancelEditBtn{background:#232930;border:1px solid #333a43 !important;color:var(--text) !important;}
   .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;}
-  .memo-list li{display:flex;align-items:center;gap:8px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
-  .memo-list li .star-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
+  .memo-list li{display:flex;align-items:center;gap:6px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
+  .memo-list li .star-btn,.memo-list li .lock-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
   .memo-list li .star-btn.on{color:var(--red);}
+  .memo-list li .lock-btn.on{color:var(--purple);}
   .memo-list li .txt{flex:1;word-break:break-all;}
   .memo-list li .txt.imp{color:#ff8787;}
+  .memo-list li .txt.priv{color:var(--purple);}
   .memo-list li .act{background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:12px;}
   .memo-list li .del{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;}
   .empty{color:var(--dim);font-size:12px;margin-top:12px;text-align:center;}
@@ -87,7 +90,6 @@
   .gh-modal-box .field{margin-bottom:12px;}
   .gh-modal-box .field label{display:block;font-size:13px;color:var(--dim);margin-bottom:4px;}
   .gh-modal-box .field input{width:100%;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:9px 11px;font-size:13px;outline:none;}
-  .gh-modal-box .field input:focus{border-color:var(--blue);}
   .gh-modal-box .help{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.5;}
   .gh-modal-box .help a{color:var(--blue);text-decoration:none;}
   .gh-modal-box .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
@@ -128,6 +130,7 @@
   <button id="jumpBtn">이동</button>
   <span class="share" title="실시간 공유 상태">
     <span id="shareStatus" class="dot"></span><span class="lbl">실시간 공유</span>
+    <button id="bellBtn" title="알람 켜기/끄기">🔔</button>
   </span>
   <span class="gh-section">
     <span id="ghStatus" class="dot"></span>
@@ -152,6 +155,7 @@
     <div class="input-row">
       <input type="text" id="memoInput" placeholder="메모를 입력하세요" maxlength="100" />
       <label class="chk"><input type="checkbox" id="impChk" />중요</label>
+      <label class="chk priv"><input type="checkbox" id="privChk" />🔒 개인</label>
       <button id="addBtn">추가</button>
       <button id="cancelEditBtn" style="display:none;">취소</button>
     </div>
@@ -175,9 +179,7 @@
     <div class="field">
       <label>Personal Access Token (PAT)</label>
       <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" />
-      <div class="help">
-        토큰 발급: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Developer settings → Tokens</a> (repo 권한만 체크)
-      </div>
+      <div class="help">토큰 발급: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Developer settings → Tokens</a> (repo 권한만 체크)</div>
     </div>
     <div class="btn-row">
       <button id="ghTestBtn">연결 테스트</button>
@@ -191,18 +193,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  /* =====================================================
-     ★ 실시간 공유 방 코드 - 이 값을 바꾸면 다른 그룹과 구분됩니다
-     ===================================================== */
+  /* ★ 실시간 공유 방 코드 */
   const SHARE_ROOM = 'our-team-calendar';
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid'), ticker = $('#ticker');
   const modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
-        impChk = $('#impChk'), addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
+        impChk = $('#impChk'), privChk = $('#privChk'),
+        addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
         yearSel = $('#yearSel'), monthSel = $('#monthSel'), dateJump = $('#dateJump'),
-        shareStatus = $('#shareStatus'),
+        shareStatus = $('#shareStatus'), bellBtn = $('#bellBtn'),
         ghModal = $('#ghModal'), ghRepo = $('#ghRepo'), ghPath = $('#ghPath'), ghToken = $('#ghToken'),
         ghStatus = $('#ghStatus'), ghStatusMsg = $('#ghStatusMsg'),
         toast = $('#toast');
@@ -216,6 +217,7 @@
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const countAll = obj => Object.values(obj).reduce((s, a) => s + a.length, 0);
 
   function showToast(msg, type='') {
     toast.textContent = msg;
@@ -223,6 +225,44 @@
     clearTimeout(toast._t);
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
+
+  /* ---------- 알람 (소리 + 시스템 알림) ---------- */
+  let alarmOn = localStorage.getItem('alarmOn') !== '0';
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function beep(freq, dur) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.value = 0.08;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.stop(audioCtx.currentTime + dur);
+  }
+  function updateBell() { bellBtn.textContent = alarmOn ? '🔔' : '🔕'; }
+  function notify(msg) {
+    showToast(msg, 'ok');
+    if (!alarmOn) return;
+    beep(880, .12); setTimeout(() => beep(1174, .18), 140);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('캘린더 메모', { body: msg });
+    }
+  }
+  bellBtn.onclick = async () => {
+    alarmOn = !alarmOn;
+    localStorage.setItem('alarmOn', alarmOn ? '1' : '0');
+    updateBell();
+    if (alarmOn) {
+      initAudio();
+      if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+      notify('알람이 켜졌습니다.');
+    } else showToast('알람이 꺼졌습니다.');
+  };
+  document.addEventListener('pointerdown', initAudio, { once: true });
 
   /* ---------- 공휴일 ---------- */
   const FIXED_HOLIDAYS = {'01-01':'신정','03-01':'삼일절','05-05':'어린이날','06-06':'현충일',
@@ -249,22 +289,43 @@
     return null;
   }
 
-  /* ---------- 저장/불러오기 (실시간 저장) ---------- */
+  /* ---------- 저장/불러오기 ---------- */
   let memos = {};
   if (localStorage.getItem('calMemos') === null) {
     const t = new Date(), yst = new Date(t.getTime() - 864e5);
     memos = {
-      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ text: '회의실 도어 점검 요청', important: false }],
-      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ text: '오전 7시 네트워크 점검', important: true }]
+      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ text: '회의실 도어 점검 요청', important: false, private: false }],
+      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ text: '오전 7시 네트워크 점검', important: true, private: false }]
     };
     save();
   } else {
     try { memos = JSON.parse(localStorage.getItem('calMemos')) || {}; } catch (e) { memos = {}; }
   }
   Object.keys(memos).forEach(k => {
-    memos[k] = memos[k].map(x => typeof x === 'string' ? { text: x, important: false } : x);
+    memos[k] = memos[k].map(x => typeof x === 'string'
+      ? { text: x, important: false, private: false }
+      : { text: x.text, important: !!x.important, private: !!x.private });
   });
   function save() { localStorage.setItem('calMemos', JSON.stringify(memos)); }
+
+  /* 개인 메모 제외(공유용) 데이터 */
+  function sharedOnly(data) {
+    const out = {};
+    Object.keys(data || {}).forEach(k => {
+      const sh = (data[k] || []).filter(m => !m.private);
+      if (sh.length) out[k] = sh;
+    });
+    return out;
+  }
+  /* 원격 데이터 + 내 개인 메모 병합 */
+  function mergeWithPrivate(remoteShared) {
+    const merged = sharedOnly(remoteShared);
+    Object.keys(memos).forEach(k => {
+      const priv = (memos[k] || []).filter(m => m.private);
+      if (priv.length) merged[k] = (merged[k] || []).concat(priv);
+    });
+    return merged;
+  }
 
   /* ---------- GitHub 연동 ---------- */
   let ghConfig = JSON.parse(localStorage.getItem('ghConfig') || '{}');
@@ -318,28 +379,28 @@
   async function backupToGh() {
     if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
     try {
-      showToast('GitHub에 백업 중...');
+      showToast('GitHub에 백업 중... (개인 메모 제외)');
       let sha = null;
       try { sha = (await ghApi('GET')).sha; } catch (e) {}
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(memos, null, 2))));
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(sharedOnly(memos), null, 2))));
       await ghApi('PUT', { message: `메모 백업: ${new Date().toLocaleString('ko-KR')}`, content, ...(sha ? { sha } : {}) });
       showToast('✓ GitHub 백업 완료!', 'ok');
     } catch (e) { showToast('백업 실패: ' + e.message, 'err'); }
   }
   async function restoreFromGh() {
     if (!ghConfig.repo || !ghConfig.token) { showToast('먼저 GitHub 연동 설정을 하세요.', 'err'); openGhSettings(); return; }
-    if (!confirm('GitHub에서 복원하면 현재 로컬 메모가 덮어써집니다. 진행할까요?')) return;
+    if (!confirm('GitHub에서 복원할까요? (내 개인 메모는 유지됩니다)')) return;
     try {
       showToast('GitHub에서 복원 중...');
       const data = await ghApi('GET');
-      memos = JSON.parse(decodeURIComponent(escape(atob(data.content)))) || {};
-      Object.keys(memos).forEach(k => { memos[k] = memos[k].map(x => typeof x === 'string' ? { text: x, important: false } : x); });
+      const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content)))) || {};
+      memos = mergeWithPrivate(parsed);
       save(); render(); buildImportant();
       showToast('✓ GitHub 복원 완료!', 'ok');
     } catch (e) { showToast('복원 실패: ' + e.message, 'err'); }
   }
 
-  /* ---------- 실시간 공유 (자동 연결) ---------- */
+  /* ---------- 실시간 공유 ---------- */
   const myId = Math.random().toString(36).slice(2, 10);
   let client = null;
   function setStatus(on) {
@@ -349,12 +410,12 @@
   function publish(msg) {
     if (client && client.connected) {
       msg.sender = myId;
-      if (msg.type === 'memos') msg.data = memos;
+      if (msg.type === 'memos') msg.data = sharedOnly(memos);   // 개인 메모는 전송 안 함
       client.publish('calmemo/' + SHARE_ROOM, JSON.stringify(msg));
     }
   }
   function connectShare() {
-    if (typeof mqtt === 'undefined') return;   // 오프라인이면 로컬 전용으로 동작
+    if (typeof mqtt === 'undefined') return;
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: 'calmemo-' + myId, keepalive: 30 });
     client.on('connect', () => {
       client.subscribe('calmemo/' + SHARE_ROOM, () => publish({ type: 'sync-request' }));
@@ -364,9 +425,13 @@
       let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
       if (msg.sender === myId) return;
       if (msg.type === 'memos') {
-        memos = msg.data || {};
+        const before = countAll(memos);
+        memos = mergeWithPrivate(msg.data);
         save(); render(); buildImportant();
         if (selectedKey && editingIdx === null) renderList();
+        const after = countAll(memos);
+        if (after > before) notify('📢 새 공유 메모가 도착했습니다.');
+        else showToast('공유 메모가 업데이트되었습니다.', 'ok');
       } else if (msg.type === 'sync-request') {
         setTimeout(() => publish({ type: 'memos' }), Math.random() * 300);
       }
@@ -410,7 +475,6 @@
 
     const startOffset = new Date(view.y, view.m, 1).getDay();
     const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
-    // 해당 월 날짜가 포함된 주만 표시 (일반 종이달력과 동일, 4~6줄 가변)
     const total = Math.ceil((startOffset + daysInMonth) / 7) * 7;
     const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -437,8 +501,8 @@
         wrap.className = 'memos';
         list.slice(0, 4).forEach(m => {
           const line = document.createElement('div');
-          line.className = 'memo-line' + (m.important ? ' imp' : '');
-          line.textContent = (m.important ? '★ ' : '') + m.text;
+          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '');
+          line.textContent = (m.private ? '🔒 ' : (m.important ? '★ ' : '')) + m.text;
           wrap.appendChild(line);
         });
         if (list.length > 4) {
@@ -468,7 +532,8 @@
   }
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
-    editingIdx = null; memoInput.value = ''; impChk.checked = false;
+    editingIdx = null; memoInput.value = '';
+    impChk.checked = false; privChk.checked = false;
     addBtn.textContent = '추가'; cancelEditBtn.style.display = 'none';
   }
   function renderList() {
@@ -478,13 +543,15 @@
     list.forEach((m, i) => {
       const li = document.createElement('li');
       li.innerHTML = `<button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
-                      <span class="txt ${m.important ? 'imp' : ''}"></span>
+                      <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
+                      <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
       li.querySelector('.txt').textContent = m.text;
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; afterChange(); };
+      li.querySelector('.lock-btn').onclick = () => { m.private = !m.private; afterChange(); };
       li.querySelector('.act').onclick = () => {
         editingIdx = i;
-        memoInput.value = m.text; impChk.checked = m.important;
+        memoInput.value = m.text; impChk.checked = m.important; privChk.checked = m.private;
         addBtn.textContent = '저장'; cancelEditBtn.style.display = 'inline-block';
         memoInput.focus();
       };
@@ -499,13 +566,18 @@
   function addMemo() {
     const t = memoInput.value.trim();
     if (!t) return;
-    if (editingIdx === null) (memos[selectedKey] ||= []).push({ text: t, important: impChk.checked });
-    else memos[selectedKey][editingIdx] = { text: t, important: impChk.checked };
-    resetEdit(); afterChange();
+    if (editingIdx === null) {
+      (memos[selectedKey] ||= []).push({ text: t, important: impChk.checked, private: privChk.checked });
+    } else {
+      memos[selectedKey][editingIdx] = { text: t, important: impChk.checked, private: privChk.checked };
+    }
+    resetEdit();
+    afterChange();
+    notify('메모가 저장되었습니다.');
   }
   function afterChange() {
     save(); renderList(); render(); buildImportant();
-    publish({ type: 'memos' });   // 실시간 공유 전송
+    publish({ type: 'memos' });
   }
 
   /* ---------- 이벤트 ---------- */
@@ -535,10 +607,11 @@
   $('#ghRestoreBtn').onclick = restoreFromGh;
   ghModal.addEventListener('click', e => { if (e.target === ghModal) closeGhSettings(); });
 
+  updateBell();
   updateGhStatus();
   render();
   buildImportant();
-  connectShare();   // 시작과 동시에 실시간 공유 자동 연결
+  connectShare();
 </script>
 </body>
 </html>
