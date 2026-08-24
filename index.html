@@ -167,6 +167,7 @@
   .login-box #loginBtn:disabled{opacity:0.6;cursor:wait;}
   .sync-indicator{font-size:11px;color:var(--green);text-align:center;margin-top:8px;min-height:14px;}
   .login-box .hint{margin-top:10px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center;}
+  .login-box .hint b{color:var(--blue);}
 
   .acct-create{display:flex;gap:8px;flex-wrap:wrap;}
   .acct-create input{flex:1;min-width:100px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
@@ -222,8 +223,8 @@
     </div>
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
-    <div class="hint">비밀번호는 숫자 4~8자리 · 계정 관리(생성/수정/삭제)는 관리자만 가능<br>
-      팀 코드가 같아야 같은 팀으로 공유됩니다.</div>
+    <div class="hint">비밀번호는 숫자 4~8자리 · 계정 관리는 관리자만 가능<br>
+      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v2.0</b></div>
   </div>
 </div>
 
@@ -334,6 +335,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  const APP_VER = '2.0';
+  console.log('캘린더 메모 v' + APP_VER);
+
   const $ = s => document.querySelector(s);
   const grid = $('#grid'), ticker = $('#ticker');
   const loginWrap = $('#loginWrap'), teamInput = $('#teamInput'), idInput = $('#idInput'),
@@ -397,10 +401,7 @@
     const remainMB = Math.max(0, (QUOTA - used) / 1048576);
     storageInfo.textContent = `💾 ${pct.toFixed(1)}% 사용 · ${remainMB.toFixed(1)}MB 남음`;
     storageInfo.className = 'storage' + (pct > 80 ? ' warn' : (pct > 50 ? ' mid' : ''));
-
-    if (pct >= 80 && session && !cleanupManuallyOpened && cleanupModal.classList.contains('hidden')) {
-      openCleanup();
-    }
+    if (pct >= 80 && session && !cleanupManuallyOpened && cleanupModal.classList.contains('hidden')) openCleanup();
     if (pct < 80) {
       cleanupManuallyOpened = false;
       if (!cleanupModal.classList.contains('hidden')) {
@@ -410,7 +411,6 @@
     }
     if (!cleanupModal.classList.contains('hidden')) renderCleanupList();
   }
-
   function openCleanup() {
     if (!session) return;
     renderCleanupList();
@@ -420,35 +420,24 @@
     const json = localStorage.getItem(memKey()) || '';
     const used = json.length * 2;
     const pct = Math.min(100, (used / QUOTA) * 100);
-
     if (pct >= 80) {
       cleanupTitle.textContent = '⚠️ 저장소 용량이 부족합니다';
       cleanupTitle.classList.remove('ok');
-      cleanupDesc.innerHTML = `현재 저장소가 <b>${pct.toFixed(1)}%</b> 사용 중입니다.<br>
-        아래 사진들을 삭제하여 공간을 확보하세요. <b>텍스트 메모는 유지</b>됩니다.`;
+      cleanupDesc.innerHTML = `현재 저장소가 <b>${pct.toFixed(1)}%</b> 사용 중입니다.<br>아래 사진들을 삭제하여 공간을 확보하세요. <b>텍스트 메모는 유지</b>됩니다.`;
     } else {
       cleanupTitle.textContent = '✅ 저장소 용량이 충분합니다';
       cleanupTitle.classList.add('ok');
-      cleanupDesc.innerHTML = `현재 저장소가 <b class="good">${pct.toFixed(1)}%</b> 사용 중으로 여유 공간이 충분합니다.<br>
-        필요하면 오래된 사진부터 정리할 수 있습니다. <b>텍스트 메모는 유지</b>됩니다.`;
+      cleanupDesc.innerHTML = `현재 저장소가 <b class="good">${pct.toFixed(1)}%</b> 사용 중으로 여유 공간이 충분합니다.<br>필요하면 오래된 사진부터 정리할 수 있습니다. <b>텍스트 메모는 유지</b>됩니다.`;
     }
-
     const items = [];
     Object.entries(memos).forEach(([k, list]) => {
       list.forEach(m => {
-        if (m.image) {
-          const sizeBytes = Math.round(m.image.length * 0.75);
-          items.push({ key: k, id: m.id, memo: m, sizeBytes, date: k });
-        }
+        if (m.image) items.push({ key: k, id: m.id, memo: m, sizeBytes: Math.round(m.image.length * 0.75), date: k });
       });
     });
     items.sort((a, b) => a.date.localeCompare(b.date) || (b.sizeBytes - a.sizeBytes));
-
     cleanupList.innerHTML = '';
-    if (!items.length) {
-      cleanupList.innerHTML = '<div class="empty">삭제할 사진이 없습니다.</div>';
-      return;
-    }
+    if (!items.length) { cleanupList.innerHTML = '<div class="empty">삭제할 사진이 없습니다.</div>'; return; }
     items.forEach(it => {
       const li = document.createElement('li');
       li.className = 'cleanup-item';
@@ -463,8 +452,7 @@
           <div class="t">${esc(shortText)}</div>
           <div class="sz">📷 ${sizeStr}</div>
         </div>
-        <button class="del">🗑 삭제</button>
-      `;
+        <button class="del">🗑 삭제</button>`;
       li.querySelector('.thumb').onclick = () => openLightbox(it.memo.image);
       li.querySelector('.del').onclick = () => {
         if (!confirm('이 사진만 삭제하시겠습니까?\n(텍스트 메모는 유지됩니다)')) return;
@@ -474,8 +462,7 @@
     });
   }
   function deleteImageFromMemo(key, id) {
-    const list = memos[key] || [];
-    const m = list.find(x => x.id === id);
+    const m = (memos[key] || []).find(x => x.id === id);
     if (m) {
       m.image = '';
       save(); render();
@@ -495,11 +482,7 @@
   imgFile.onchange = e => {
     const f = e.target.files[0];
     if (!f) return;
-    if (!f.type.startsWith('image/')) {
-      alert('이미지 파일(JPG/PNG 등)만 업로드 가능합니다.');
-      imgFile.value = '';
-      return;
-    }
+    if (!f.type.startsWith('image/')) { alert('이미지 파일(JPG/PNG 등)만 업로드 가능합니다.'); imgFile.value = ''; return; }
     const reader = new FileReader();
     reader.onload = ev => {
       const img = new Image();
@@ -530,12 +513,9 @@
 
   /* ---------- 뒤로가기 ---------- */
   function anyModalOpen() {
-    return !modal.classList.contains('hidden') ||
-           !savedModal.classList.contains('hidden') ||
-           !weekModal.classList.contains('hidden') ||
-           !acctModal.classList.contains('hidden') ||
-           !cleanupModal.classList.contains('hidden') ||
-           !lightbox.classList.contains('hidden');
+    return !modal.classList.contains('hidden') || !savedModal.classList.contains('hidden') ||
+           !weekModal.classList.contains('hidden') || !acctModal.classList.contains('hidden') ||
+           !cleanupModal.classList.contains('hidden') || !lightbox.classList.contains('hidden');
   }
   function closeTopModal() {
     if (!lightbox.classList.contains('hidden')) { lightbox.classList.add('hidden'); lightboxImg.src = ''; }
@@ -776,14 +756,17 @@
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
   /* =====================================================
-     ★ 실시간 공유 - 단일 연결 방식 (안정화)
+     ★ 실시간 공유 - 브로커 2중 병렬 + 중복 제거 (v2.0)
      ===================================================== */
+  const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
   const myId = Math.random().toString(36).slice(2, 10);
-  let client = null, clientTeam = null, preAccounts = null;
+  let clients = [], clientTeam = null, preAccounts = null;
+  const seenMids = new Set();
 
-  function setStatus(on) {
-    shareStatus.className = 'dot' + (on ? ' on' : '');
-    shareStatus.title = on ? `실시간 공유 연결됨 (${TEAM})` : '연결 안 됨';
+  function updateStatus() {
+    const n = clients.filter(c => c.connected).length;
+    shareStatus.className = 'dot' + (n > 0 ? ' on' : '');
+    shareStatus.title = n > 0 ? `실시간 공유 연결됨 (브로커 ${n}개)` : '연결 안 됨';
   }
   function sharedOnly(data) {
     const out = {};
@@ -794,94 +777,103 @@
     return out;
   }
   function publish(msg) {
-    if (client && client.connected && clientTeam === TEAM) {
-      msg.sender = myId;
-      if (msg.type === 'memos') {
-        let data = sharedOnly(memos);
-        if (JSON.stringify({ ...msg, data }).length > 500000) {
-          data = JSON.parse(JSON.stringify(data));
-          Object.values(data).forEach(arr => arr.forEach(m => { delete m.image; }));
-          showToast('사진 데이터가 커서 텍스트만 공유되었습니다.', 'err');
-        }
-        msg.data = data;
+    if (!session || clientTeam !== TEAM) return;
+    msg.sender = myId; msg.mid = genId(); msg.v = APP_VER;
+    if (msg.type === 'memos') {
+      let data = sharedOnly(memos);
+      if (JSON.stringify({ ...msg, data }).length > 500000) {
+        data = JSON.parse(JSON.stringify(data));
+        Object.values(data).forEach(arr => arr.forEach(m => { delete m.image; }));
+        showToast('사진 데이터가 커서 텍스트만 공유되었습니다.', 'err');
       }
-      client.publish(`calmemo/${TEAM}/memos`, JSON.stringify(msg));
+      msg.data = data;
     }
+    const raw = JSON.stringify(msg);
+    let sent = 0;
+    clients.forEach(c => { if (c.connected) { c.publish(`calmemo/${TEAM}/memos`, raw); sent++; } });
+    console.log('[share] send', msg.type, 'via', sent, 'broker(s)');
   }
   function publishAccounts() {
-    if (client && client.connected && clientTeam === TEAM) {
-      client.publish(`calmemo/${TEAM}/accounts`, JSON.stringify({ sender: myId, type: 'accounts', data: accounts }));
-    }
+    if (!session || clientTeam !== TEAM) return;
+    const raw = JSON.stringify({ sender: myId, mid: genId(), type: 'accounts', data: accounts });
+    clients.forEach(c => { if (c.connected) c.publish(`calmemo/${TEAM}/accounts`, raw); });
   }
-  function requestSync(team) {
-    if (!client || !client.connected) return;
-    client.subscribe([`calmemo/${team}/accounts`, `calmemo/${team}/memos`]);
-    client.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, type: 'sync-request' }));
-    client.publish(`calmemo/${team}/memos`, JSON.stringify({ sender: myId, type: 'sync-request' }));
+  function requestSyncOn(c, team) {
+    c.subscribe([`calmemo/${team}/accounts`, `calmemo/${team}/memos`]);
+    c.publish(`calmemo/${team}/accounts`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request' }));
+    c.publish(`calmemo/${team}/memos`, JSON.stringify({ sender: myId, mid: genId(), type: 'sync-request' }));
+  }
+  function requestSyncAll(team) {
+    clients.forEach(c => { if (c.connected) requestSyncOn(c, team); });
   }
   function connectTeam(team) {
     if (typeof mqtt === 'undefined') return;
-    if (client && clientTeam === team) return;
-    if (client) { try { client.end(true); } catch (e) {} client = null; }
+    if (clientTeam === team && clients.length) return;
+    clients.forEach(c => { try { c.end(true); } catch (e) {} });
+    clients = [];
     clientTeam = team;
     preAccounts = null;
     if (!session) syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
-    client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-      clientId: 'calmemo-' + myId, keepalive: 30, reconnectPeriod: 4000, clean: true
+    BROKERS.forEach((url, idx) => {
+      const c = mqtt.connect(url, { clientId: `calmemo-${myId}-${idx}`, keepalive: 30, reconnectPeriod: 5000, clean: true });
+      clients.push(c);
+      c.on('connect', () => { console.log('[share] connected:', url); requestSyncOn(c, team); updateStatus(); });
+      c.on('reconnect', updateStatus);
+      c.on('close', updateStatus);
+      c.on('offline', updateStatus);
+      c.on('error', () => {});
+      c.on('message', onShareMessage);
     });
-    client.on('connect', () => {
-      requestSync(clientTeam);
-      if (session) setStatus(true);
-    });
-    client.on('reconnect', () => { if (session) setStatus(false); });
-    client.on('close', () => setStatus(false));
-    client.on('offline', () => setStatus(false));
-    client.on('error', () => {});
-    client.on('message', (topic, payload) => {
-      let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
-      if (msg.sender === myId) return;
-      const parts = topic.split('/');           // ['calmemo', 팀, 종류]
-      const tTeam = parts[1], kind = parts[2];
+  }
+  function onShareMessage(topic, payload) {
+    let msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+    if (msg.sender === myId) return;
+    if (msg.mid) {
+      if (seenMids.has(msg.mid)) return;
+      seenMids.add(msg.mid);
+      if (seenMids.size > 1000) seenMids.clear();
+    }
+    console.log('[share] recv', msg.type, '|', topic);
+    const parts = topic.split('/');
+    const tTeam = parts[1], kind = parts[2];
 
-      if (kind === 'accounts') {
-        if (msg.type === 'accounts' && msg.data && msg.data[ADMIN]) {
-          localStorage.setItem('accounts_' + tTeam, JSON.stringify(msg.data));
-          if (!session && tTeam === (teamInput.value.trim() || 'our-team')) {
-            preAccounts = msg.data;
-            syncIndicator.textContent = '✓ 팀 계정 동기화 완료';
-          }
-          if (session && tTeam === TEAM) {
-            accounts = msg.data;
-            if (!accounts[session.user]) doLogout('계정이 삭제되어 로그아웃되었습니다.');
-            else if (acctModal && !acctModal.classList.contains('hidden')) renderAcctList();
-          }
-        } else if (msg.type === 'sync-request') {
-          const local = loadAccountsLocal(tTeam);
-          client.publish(`calmemo/${tTeam}/accounts`, JSON.stringify({ sender: myId, type: 'accounts', data: local }));
+    if (kind === 'accounts') {
+      if (msg.type === 'accounts' && msg.data && msg.data[ADMIN]) {
+        localStorage.setItem('accounts_' + tTeam, JSON.stringify(msg.data));
+        if (!session && tTeam === (teamInput.value.trim() || 'our-team')) {
+          preAccounts = msg.data;
+          syncIndicator.textContent = '✓ 팀 계정 동기화 완료';
         }
-      }
-      else if (kind === 'memos') {
-        if (!session || tTeam !== TEAM) return;
-        if (msg.type === 'memos') {
-          const before = countAll(memos);
-          const merged = sharedOnly(msg.data);
-          Object.keys(memos).forEach(k => {
-            const priv = (memos[k] || []).filter(m => m.private);
-            const imgs = {};
-            (memos[k] || []).forEach(m => { if (m.image) imgs[m.id] = m.image; });
-            if (priv.length) merged[k] = (merged[k] || []).concat(priv);
-            (merged[k] || []).forEach(m => { if (imgs[m.id] && !m.image) m.image = imgs[m.id]; });
-          });
-          memos = merged;
-          save(); render(); buildImportant();
-          if (selectedKey && editingIdx === null) renderList();
-          if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
-          else showToast('공유 메모가 업데이트되었습니다.', 'ok');
-        } else if (msg.type === 'sync-request') {
-          setTimeout(() => { publish({ type: 'memos' }); publishAccounts(); }, Math.random() * 300);
+        if (session && tTeam === TEAM) {
+          accounts = msg.data;
+          if (!accounts[session.user]) doLogout('계정이 삭제되어 로그아웃되었습니다.');
         }
+      } else if (msg.type === 'sync-request') {
+        const raw = JSON.stringify({ sender: myId, mid: genId(), type: 'accounts', data: loadAccountsLocal(tTeam) });
+        clients.forEach(c => { if (c.connected) c.publish(`calmemo/${tTeam}/accounts`, raw); });
       }
-    });
+    }
+    else if (kind === 'memos') {
+      if (!session || tTeam !== TEAM) return;
+      if (msg.type === 'memos') {
+        const before = countAll(memos);
+        const merged = sharedOnly(msg.data);
+        Object.keys(memos).forEach(k => {
+          const priv = (memos[k] || []).filter(m => m.private);
+          const imgs = {};
+          (memos[k] || []).forEach(m => { if (m.image) imgs[m.id] = m.image; });
+          if (priv.length) merged[k] = (merged[k] || []).concat(priv);
+          (merged[k] || []).forEach(m => { if (imgs[m.id] && !m.image) m.image = imgs[m.id]; });
+        });
+        memos = merged;
+        save(); render(); buildImportant();
+        if (selectedKey && editingIdx === null) renderList();
+        if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
+        else showToast('공유 메모가 업데이트되었습니다.', 'ok');
+      } else if (msg.type === 'sync-request') {
+        setTimeout(() => { publish({ type: 'memos' }); publishAccounts(); }, Math.random() * 300);
+      }
+    }
   }
 
   teamInput.addEventListener('input', () => {
@@ -938,37 +930,33 @@
   function enterApp() {
     loginWrap.style.display = 'none';
     syncIndicator.textContent = '';
-    userBadge.textContent = `👤 ${session.user} · ${session.team}`;
+    userBadge.textContent = `👤 ${session.user} · ${session.team} · v${APP_VER}`;
     acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
     loadMemos();
     migrateLegacy();
     updateStorage(); render(); buildImportant();
 
-    connectTeam(TEAM);       // 같은 팀이면 기존 연결 유지, 다르면 새로 연결
-    requestSync(TEAM);       // 이미 연결된 상태면 즉시 동기화
-    setStatus(true);
+    connectTeam(TEAM);
+    requestSyncAll(TEAM);
+    updateStatus();
     lastActivity = Date.now();
   }
 
   function doLogout(msg) {
-    if (client && clientTeam !== (teamInput.value.trim() || 'our-team')) {
-      try { client.end(true); } catch (e) {}
-      client = null;
-    }
     session = null;
     sessionStorage.removeItem('session');
     memos = {};
     closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
     acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
     cleanupModal.classList.add('hidden'); cleanupManuallyOpened = false;
-    setStatus(false);
     loginWrap.style.display = 'flex';
     pwInput.value = '';
     loginBtn.disabled = false;
     loginBtn.textContent = '로그인';
-    if (msg) setTimeout(() => alert(msg), 100);
     connectTeam(teamInput.value.trim() || 'our-team');
+    updateStatus();
     syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
+    if (msg) setTimeout(() => alert(msg), 100);
   }
   logoutBtn.onclick = () => doLogout();
   acctBtn.onclick = () => { renderAcctList(); acctModal.classList.remove('hidden'); };
