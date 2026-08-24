@@ -23,6 +23,7 @@
   .share{display:flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border);}
   .dot{width:10px;height:10px;border-radius:50%;background:#5c6670;}
   .dot.on{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .user-badge{font-size:12px;color:var(--blue);background:#12161b;border:1px solid var(--border);border-radius:6px;padding:5px 10px;}
   .storage{font-size:12px;color:var(--dim);margin-left:10px;padding-left:12px;border-left:1px solid var(--border);}
   .storage.mid{color:var(--yellow);}
   .storage.warn{color:var(--red);}
@@ -99,7 +100,6 @@
   .close-row{margin-top:16px;text-align:right;}
   .close-row button{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;}
 
-  /* 라이트박스(이미지 확대) */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:30;cursor:zoom-out;}
   .lightbox.hidden{display:none;}
   .lightbox img{max-width:94vw;max-height:94vh;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,.8);}
@@ -126,8 +126,33 @@
   .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
 
+  /* 로그인 화면 */
+  .login-wrap{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;}
+  .login-box{width:380px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:12px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  .login-box h1{font-size:20px;text-align:center;margin-bottom:22px;}
+  .login-box .field{margin-bottom:12px;}
+  .login-box .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;}
+  .login-box .field input,.login-box .field select{width:100%;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:10px 12px;font-size:14px;outline:none;}
+  .login-box .field input:focus{border-color:var(--blue);}
+  .login-box #loginBtn{width:100%;margin-top:8px;background:var(--blue);border:none;color:#fff;border-radius:6px;padding:11px;cursor:pointer;font-size:14px;font-weight:600;}
+  .login-box .hint{margin-top:14px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center;}
+
+  /* 계정 관리 */
+  .acct-create{display:flex;gap:8px;flex-wrap:wrap;}
+  .acct-create input{flex:1;min-width:100px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
+  .acct-create button{background:var(--green);border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
+  .acct-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;}
+  .acct-list li{display:flex;align-items:center;gap:8px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:9px 12px;font-size:13px;}
+  .acct-list li .aid{flex:1;font-weight:600;}
+  .acct-list li .aid.admin{color:var(--yellow);}
+  .acct-list li .apw{color:var(--dim);font-size:12px;letter-spacing:1px;}
+  .acct-list li button{background:transparent;border:none;cursor:pointer;font-size:12px;padding:0 3px;}
+  .acct-list li .eye{color:var(--dim);}
+  .acct-list li .mod{color:var(--blue);}
+  .acct-list li .del{color:var(--red);}
+
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232930;border:1px solid #444c56;
-         color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.4);
+         color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);
          opacity:0;transition:opacity .3s;pointer-events:none;}
   .toast.show{opacity:1;}
   .toast.ok{border-color:var(--green);}
@@ -150,6 +175,28 @@
 </head>
 <body>
 
+<!-- 로그인 화면 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <h1>📅 캘린더 메모 로그인</h1>
+    <div class="field"><label>팀 코드</label><input id="teamInput" value="our-team" /></div>
+    <div class="field"><label>아이디</label><input id="idInput" autocomplete="username" /></div>
+    <div class="field"><label>비밀번호 (숫자만)</label><input id="pwInput" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password" /></div>
+    <div class="field"><label>미사용 시 자동 로그아웃</label>
+      <select id="logoutSel">
+        <option value="5">5분</option>
+        <option value="10" selected>10분</option>
+        <option value="60">1시간</option>
+        <option value="0">끄기</option>
+      </select>
+    </div>
+    <button id="loginBtn">로그인</button>
+    <div class="hint">관리자 계정: <b>obj1407</b> / 초기 비밀번호 <b>1407</b><br>
+      비밀번호는 숫자 4~8자리 · 계정 관리(생성/수정/삭제)는 관리자만 가능<br>
+      팀 코드가 같아야 같은 팀으로 공유됩니다.</div>
+  </div>
+</div>
+
 <div class="topbar">
   <button id="prevBtn">‹</button>
   <select id="yearSel"></select><span class="lbl">년</span>
@@ -164,6 +211,9 @@
     <span id="shareStatus" class="dot"></span><span class="lbl">실시간 공유</span>
     <button id="bellBtn" title="알람 켜기/끄기">🔔</button>
   </span>
+  <span class="user-badge" id="userBadge"></span>
+  <button id="acctBtn" style="display:none;">👥 계정</button>
+  <button id="logoutBtn" title="로그아웃">🚪</button>
   <span class="storage" id="storageInfo" title="브라우저 저장소 사용량"></span>
   <div class="ticker" id="ticker" title="더블클릭 시 해당 날짜로 이동"></div>
 </div>
@@ -227,17 +277,34 @@
   </div>
 </div>
 
+<!-- 계정 관리 모달 (관리자 전용) -->
+<div class="modal hidden" id="acctModal">
+  <div class="modal-box">
+    <h2>👥 계정 관리 (관리자 전용)</h2>
+    <div class="acct-create">
+      <input id="newId" placeholder="새 아이디 (영문/숫자 3~20자)" maxlength="20" />
+      <input id="newPw" type="password" inputmode="numeric" maxlength="8" placeholder="비밀번호 (숫자 4~8자)" />
+      <button id="createBtn">생성</button>
+    </div>
+    <ul class="acct-list" id="acctList"></ul>
+    <div class="close-row"><button id="acctCloseBtn">닫기</button></div>
+  </div>
+</div>
+
 <!-- 이미지 확대 라이트박스 -->
 <div class="lightbox hidden" id="lightbox"><img id="lightboxImg" /></div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  const SHARE_ROOM = 'our-team-calendar';
-
   const $ = s => document.querySelector(s);
   const grid = $('#grid'), ticker = $('#ticker');
-  const modal = $('#modal'), modalTitle = $('#modalTitle'),
+  const loginWrap = $('#loginWrap'), teamInput = $('#teamInput'), idInput = $('#idInput'),
+        pwInput = $('#pwInput'), logoutSel = $('#logoutSel'), loginBtn = $('#loginBtn'),
+        userBadge = $('#userBadge'), acctBtn = $('#acctBtn'), logoutBtn = $('#logoutBtn'),
+        acctModal = $('#acctModal'), acctList = $('#acctList'),
+        newId = $('#newId'), newPw = $('#newPw'),
+        modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
         impChk = $('#impChk'), privChk = $('#privChk'),
         timeInput = $('#timeInput'), alarmDayChk = $('#alarmDayChk'),
@@ -258,6 +325,8 @@
   let selectedKey = null, editingIdx = null;
   let impList = [], impIdx = 0;
   let currentImage = '';
+  let TEAM = null, session = null, accounts = {};
+  const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
   const pad = n => String(n).padStart(2, '0');
@@ -265,6 +334,10 @@
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const countAll = obj => Object.values(obj).reduce((s, a) => s + a.length, 0);
   const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const validPw = pw => /^\d{4,8}$/.test(pw);
+  const validId = id => /^[a-zA-Z0-9_]{3,20}$/.test(id);
+  const memKey = () => 'calMemos_' + TEAM;
+  const accKey = () => 'accounts_' + TEAM;
 
   function showToast(msg, type='') {
     toast.textContent = msg;
@@ -273,53 +346,54 @@
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
 
-  /* ---------- 저장소 사용량 표시 ---------- */
-  const QUOTA = 5 * 1024 * 1024;   // 브라우저 localStorage 약 5MB
+  /* ---------- 저장소 사용량 ---------- */
+  const QUOTA = 5 * 1024 * 1024;
   function updateStorage() {
-    const json = localStorage.getItem('calMemos') || '';
-    const used = json.length * 2;   // UTF-16 = 문자당 2바이트
+    const json = localStorage.getItem(memKey()) || '';
+    const used = json.length * 2;
     const pct = Math.min(100, (used / QUOTA) * 100);
     const remainMB = Math.max(0, (QUOTA - used) / 1048576);
     storageInfo.textContent = `💾 ${pct.toFixed(1)}% 사용 · ${remainMB.toFixed(1)}MB 남음`;
     storageInfo.className = 'storage' + (pct > 80 ? ' warn' : (pct > 50 ? ' mid' : ''));
   }
 
-  /* ---------- 뒤로가기: 메인에서만 종료 확인 ---------- */
+  /* ---------- 뒤로가기 ---------- */
   function anyModalOpen() {
     return !modal.classList.contains('hidden') ||
            !savedModal.classList.contains('hidden') ||
            !weekModal.classList.contains('hidden') ||
+           !acctModal.classList.contains('hidden') ||
            !lightbox.classList.contains('hidden');
   }
   function closeTopModal() {
     if (!lightbox.classList.contains('hidden')) { lightbox.classList.add('hidden'); lightboxImg.src = ''; }
     else if (!savedModal.classList.contains('hidden')) savedModal.classList.add('hidden');
+    else if (!acctModal.classList.contains('hidden')) acctModal.classList.add('hidden');
     else if (!modal.classList.contains('hidden')) closeModal();
     else if (!weekModal.classList.contains('hidden')) weekModal.classList.add('hidden');
   }
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', () => {
+    if (loginWrap.style.display !== 'none' && loginWrap.style.display !== '') {
+      // 로그인 화면에서 뒤로가기 → 종료 확인
+      if (confirm('종료하시겠습니까?')) { window.close(); history.back(); }
+      else history.pushState(null, '', location.href);
+      return;
+    }
     if (anyModalOpen()) {
-      closeTopModal();                       // 메모장 열려있으면 팝업만 닫기
+      closeTopModal();
       history.pushState(null, '', location.href);
     } else {
-      if (confirm('종료하시겠습니까?')) {     // 메인 화면에서만 종료 확인
-        window.close();
-        history.back();
-      } else {
-        history.pushState(null, '', location.href);
-      }
+      if (confirm('종료하시겠습니까?')) { window.close(); history.back(); }
+      else history.pushState(null, '', location.href);
     }
   });
 
   /* ---------- 라이트박스 ---------- */
-  function openLightbox(src) {
-    lightboxImg.src = src;
-    lightbox.classList.remove('hidden');
-  }
+  function openLightbox(src) { lightboxImg.src = src; lightbox.classList.remove('hidden'); }
   lightbox.onclick = () => { lightbox.classList.add('hidden'); lightboxImg.src = ''; };
 
-  /* ---------- 알람 ---------- */
+  /* ---------- 알람 소리 ---------- */
   let alarmOn = localStorage.getItem('alarmOn') !== '0';
   let audioCtx = null;
   function initAudio() {
@@ -379,170 +453,152 @@
     return null;
   }
 
-  /* ---------- 저장 ---------- */
+  /* ---------- 메모 저장 ---------- */
   let memos = {};
-  if (localStorage.getItem('calMemos') === null) {
-    const t = new Date(), yst = new Date(t.getTime() - 864e5);
-    memos = {
-      [keyOf(yst.getFullYear(), yst.getMonth(), yst.getDate())]: [{ id: genId(), text: '회의실 도어 점검 요청', important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }],
-      [keyOf(t.getFullYear(), t.getMonth(), t.getDate())]: [{ id: genId(), text: '오전 7시 네트워크 점검', important: true, private: false, time: '07:00', alarmDay: false, alarmMin: 60, image: '' }]
-    };
-    save();
-  } else {
-    try { memos = JSON.parse(localStorage.getItem('calMemos')) || {}; } catch (e) { memos = {}; }
+  function loadMemos() {
+    try { memos = JSON.parse(localStorage.getItem(memKey())) || {}; } catch (e) { memos = {}; }
+    Object.keys(memos).forEach(k => {
+      memos[k] = memos[k].map(x => typeof x === 'string'
+        ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }
+        : { id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
+            time: x.time || '', alarmDay: !!x.alarmDay,
+            alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),
+            image: x.image || '' });
+    });
   }
-  Object.keys(memos).forEach(k => {
-    memos[k] = memos[k].map(x => typeof x === 'string'
-      ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }
-      : { id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
-          time: x.time || '', alarmDay: !!x.alarmDay,
-          alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),
-          image: x.image || '' });
-  });
   function save() {
-    try { localStorage.setItem('calMemos', JSON.stringify(memos)); updateStorage(); }
+    try { localStorage.setItem(memKey(), JSON.stringify(memos)); updateStorage(); }
     catch (e) { showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err'); updateStorage(); }
   }
 
-  function sharedOnly(data) {
-    const out = {};
-    Object.keys(data || {}).forEach(k => {
-      const sh = (data[k] || []).filter(m => !m.private);
-      if (sh.length) out[k] = sh;
-    });
-    return out;
+  /* ---------- 계정 관리 ---------- */
+  function loadAccounts() {
+    let acc = null;
+    try { acc = JSON.parse(localStorage.getItem(accKey())); } catch (e) {}
+    if (!acc || !acc[ADMIN]) {
+      acc = acc || {};
+      if (!acc[ADMIN]) acc[ADMIN] = { pw: '1407' };
+      localStorage.setItem(accKey(), JSON.stringify(acc));
+    }
+    return acc;
   }
-  function fmtAlarm(m) {
-    if (!m.alarmMin) return '';
-    const h = Math.floor(m.alarmMin / 60), mm = m.alarmMin % 60;
-    return (h ? h + '시간 ' : '') + (mm ? mm + '분' : '') + ' 전';
+  function saveAccounts() {
+    localStorage.setItem(accKey(), JSON.stringify(accounts));
+    publishAccounts();
   }
-  function memoLabel(m) {
-    return (m.private ? '🔒 ' : (m.important ? '★ ' : '')) +
-           (m.time ? `[${m.time}] ` : '') + m.text +
-           (m.image ? ' 📷' : '') +
-           ((m.alarmDay || m.alarmMin > 0) ? ' ⏰' : '');
+  function publishAccounts() {
+    if (client && client.connected) {
+      client.publish(`calmemo/${TEAM}/accounts`, JSON.stringify({ sender: myId, type: 'accounts', data: accounts }));
+    }
   }
-
-  /* ---------- 사진 첨부 ---------- */
-  imgFile.onchange = e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (!f.type.startsWith('image/')) { alert('이미지 파일만 업로드 가능합니다.'); return; }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 640;
-        let { width, height } = img;
-        if (width > MAX || height > MAX) {
-          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
-          else { width = Math.round(width * MAX / height); height = MAX; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        currentImage = canvas.toDataURL('image/jpeg', 0.7);
-        imgThumb.src = currentImage;
-        imgPreview.classList.remove('hidden');
+  function renderAcctList() {
+    acctList.innerHTML = '';
+    Object.keys(accounts).sort().forEach(id => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="aid ${id === ADMIN ? 'admin' : ''}">${id === ADMIN ? '👑 ' : ''}${esc(id)}</span>
+                      <span class="apw">••••</span>
+                      <button class="eye" title="비밀번호 보기">👁</button>
+                      <button class="mod" title="수정">✏️</button>
+                      <button class="del" title="삭제">🗑</button>`;
+      const pwEl = li.querySelector('.apw');
+      li.querySelector('.eye').onclick = () => {
+        pwEl.textContent = pwEl.textContent === '••••' ? accounts[id].pw : '••••';
       };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(f);
-    imgFile.value = '';
-  };
-  imgRemoveBtn.onclick = () => {
-    currentImage = '';
-    imgThumb.src = '';
-    imgPreview.classList.add('hidden');
-  };
-  imgThumb.onclick = () => { if (currentImage) openLightbox(currentImage); };
-
-  /* ---------- 알람 엔진 ---------- */
-  function memoDateTime(key, m) {
-    const [y, mo, d] = key.split('-').map(Number);
-    const [hh, mm] = (m.time || '09:00').split(':').map(Number);
-    return new Date(y, mo - 1, d, hh, mm, 0);
-  }
-  function getAlarmTimes(key, m) {
-    const dt = memoDateTime(key, m);
-    const arr = [];
-    if (m.alarmDay) { const d1 = new Date(dt); d1.setDate(d1.getDate() - 1); arr.push({ t: d1, type: 'day' }); }
-    if (m.alarmMin > 0) arr.push({ t: new Date(dt.getTime() - m.alarmMin * 60000), type: 'min' });
-    return arr;
-  }
-  let lastAlarmCheck = Date.now();
-  function checkAlarms() {
-    const nowT = Date.now();
-    const d = new Date();
-    const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    Object.entries(memos).forEach(([k, list]) => {
-      const [yy, mm, dd] = k.split('-').map(Number);
-      if (new Date(yy, mm - 1, dd).getTime() < todayStart) return;
-      (list || []).forEach(m => {
-        getAlarmTimes(k, m).forEach(a => {
-          const at = a.t.getTime();
-          if (at > lastAlarmCheck && at <= nowT) {
-            const label = a.type === 'day' ? '하루 전 알람' : `${fmtAlarm(m)} 알람`;
-            notify(`⏰ ${label} → ${m.text} (${+mm}/${+dd} ${m.time || '09:00'})`);
+      li.querySelector('.mod').onclick = () => {
+        if (id !== ADMIN) {
+          const nid = prompt('새 아이디를 입력하세요 (공백 = 유지)', id);
+          if (nid !== null && nid.trim() && nid.trim() !== id) {
+            if (!validId(nid.trim())) return alert('아이디는 영문/숫자 3~20자여야 합니다.');
+            if (accounts[nid.trim()]) return alert('이미 존재하는 아이디입니다.');
+            accounts[nid.trim()] = accounts[id];
+            delete accounts[id];
+            id = nid.trim();
           }
-        });
-      });
+        }
+        const npw = prompt('새 비밀번호를 입력하세요 (공백 = 유지, 숫자 4~8자)', '');
+        if (npw !== null && npw.trim()) {
+          if (!validPw(npw.trim())) return alert('비밀번호는 숫자 4~8자여야 합니다.');
+          accounts[id].pw = npw.trim();
+        }
+        saveAccounts(); renderAcctList();
+        showToast('계정이 수정되었습니다.', 'ok');
+      };
+      li.querySelector('.del').onclick = () => {
+        if (id === ADMIN) return alert('관리자 계정은 삭제할 수 없습니다.');
+        if (!confirm(`'${id}' 계정을 삭제하시겠습니까?`)) return;
+        delete accounts[id];
+        saveAccounts(); renderAcctList();
+        showToast('계정이 삭제되었습니다.', 'ok');
+      };
+      acctList.appendChild(li);
     });
-    lastAlarmCheck = nowT;
   }
+  $('#createBtn').onclick = () => {
+    const id = newId.value.trim(), pw = newPw.value.trim();
+    if (!validId(id)) return alert('아이디는 영문/숫자 3~20자여야 합니다.');
+    if (id === ADMIN) return alert('사용할 수 없는 아이디입니다.');
+    if (accounts[id]) return alert('이미 존재하는 아이디입니다.');
+    if (!validPw(pw)) return alert('비밀번호는 숫자 4~8자여야 합니다.');
+    accounts[id] = { pw };
+    saveAccounts(); renderAcctList();
+    newId.value = ''; newPw.value = '';
+    showToast(`'${id}' 계정이 생성되었습니다.`, 'ok');
+  };
+  newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
+  pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 주간 요약 ---------- */
-  function weekDates() {
-    const d = new Date();
-    const dow = (d.getDay() + 6) % 7;
-    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
-    return [...Array(7)].map((_, i) => { const t = new Date(mon); t.setDate(mon.getDate() + i); return t; });
-  }
-  function openWeekly() {
-    const days = weekDates();
-    const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
-    let total = 0;
-    weekBody.innerHTML = '';
-    days.forEach(t => {
-      const key = keyOf(t.getFullYear(), t.getMonth(), t.getDate());
-      const list = memos[key] || [];
-      if (!list.length) return;
-      total += list.length;
-      const hol = getHoliday(t.getFullYear(), t.getMonth(), t.getDate());
-      const sec = document.createElement('div');
-      sec.className = 'week-day';
-      sec.innerHTML = `<h3 class="${t.getDay() === 0 ? 'sun' : ''}">${t.getMonth() + 1}/${t.getDate()} (${DAY_NAMES[t.getDay()]})
-        ${hol ? `<span class="hol">${hol}</span>` : ''}${key === todayKey ? '<span class="today-tag">● 오늘</span>' : ''}</h3>`;
-      const ul = document.createElement('ul');
-      list.forEach(m => {
-        const li = document.createElement('li');
-        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '');
-        li.textContent = memoLabel(m);
-        ul.appendChild(li);
-      });
-      sec.appendChild(ul);
-      weekBody.appendChild(sec);
-    });
-    if (!total) weekBody.innerHTML = '<div class="empty">이번 주 메모가 없습니다.</div>';
-    weekTitle.textContent = `📋 주간 메모 정리 (${days[0].getMonth() + 1}/${days[0].getDate()} 월 ~ ${days[6].getMonth() + 1}/${days[6].getDate()} 일) · ${total}건`;
-    weekModal.classList.remove('hidden');
-  }
-  function checkWeekly() {
-    const d = new Date();
-    const hm = d.getHours() * 60 + d.getMinutes();
-    const weekKey = weekDates()[0].toDateString();
-    if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
-      localStorage.setItem('wk_mon_' + weekKey, '1');
-      notify('📋 주간 메모 정리 (월요일 09:30)');
-      openWeekly();
+  /* ---------- 로그인 / 로그아웃 / 자동 로그아웃 ---------- */
+  loginBtn.onclick = () => {
+    const team = teamInput.value.trim() || 'our-team';
+    const id = idInput.value.trim();
+    const pw = pwInput.value.trim();
+    if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
+    TEAM = team;
+    accounts = loadAccounts();
+    if (!accounts[id] || accounts[id].pw !== pw) {
+      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+      return;
     }
-    if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
-      localStorage.setItem('wk_fri_' + weekKey, '1');
-      notify('📋 주간 메모 정리 (금요일 15:30)');
-      openWeekly();
-    }
+    session = { team, user: id, timeoutMin: +logoutSel.value };
+    sessionStorage.setItem('session', JSON.stringify(session));
+    enterApp();
+  };
+  function enterApp() {
+    loginWrap.style.display = 'none';
+    userBadge.textContent = `👤 ${session.user} · ${session.team}`;
+    acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
+    loadMemos();
+    updateStorage(); render(); buildImportant();
+    connectShare();
+    lastActivity = Date.now();
   }
+  function doLogout(msg) {
+    if (client) { client.end(); client = null; }
+    session = null;
+    sessionStorage.removeItem('session');
+    memos = {};
+    closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
+    acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
+    setStatus(false);
+    loginWrap.style.display = 'flex';
+    pwInput.value = '';
+    if (msg) setTimeout(() => alert(msg), 100);
+  }
+  logoutBtn.onclick = () => doLogout();
+  acctBtn.onclick = () => { renderAcctList(); acctModal.classList.remove('hidden'); };
+  $('#acctCloseBtn').onclick = () => acctModal.classList.add('hidden');
+  acctModal.addEventListener('click', e => { if (e.target === acctModal) acctModal.classList.add('hidden'); });
+
+  /* 자동 로그아웃 (미사용 감지) */
+  let lastActivity = Date.now();
+  ['pointerdown','keydown','touchstart','mousemove'].forEach(ev =>
+    document.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true }));
+  setInterval(() => {
+    if (!session || !session.timeoutMin) return;
+    if (Date.now() - lastActivity > session.timeoutMin * 60000) {
+      doLogout('미사용 시간이 초과되어 자동 로그아웃되었습니다.');
+    }
+  }, 5000);
 
   /* ---------- 실시간 공유 ---------- */
   const myId = Math.random().toString(36).slice(2, 10);
@@ -550,6 +606,14 @@
   function setStatus(on) {
     shareStatus.className = 'dot' + (on ? ' on' : '');
     shareStatus.title = on ? '실시간 공유 연결됨' : '연결 안 됨';
+  }
+  function sharedOnly(data) {
+    const out = {};
+    Object.keys(data || {}).forEach(k => {
+      const sh = (data[k] || []).filter(m => !m.private);
+      if (sh.length) out[k] = sh;
+    });
+    return out;
   }
   function publish(msg) {
     if (client && client.connected) {
@@ -564,14 +628,17 @@
         }
         msg.data = data;
       }
-      client.publish('calmemo/' + SHARE_ROOM, JSON.stringify(msg));
+      client.publish(`calmemo/${TEAM}/memos`, JSON.stringify(msg));
     }
   }
   function connectShare() {
     if (typeof mqtt === 'undefined') return;
+    if (client) { client.end(); client = null; }
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clientId: 'calmemo-' + myId, keepalive: 30 });
     client.on('connect', () => {
-      client.subscribe('calmemo/' + SHARE_ROOM, () => publish({ type: 'sync-request' }));
+      client.subscribe([`calmemo/${TEAM}/memos`, `calmemo/${TEAM}/accounts`], () => {
+        publish({ type: 'sync-request' });
+      });
       setStatus(true);
     });
     client.on('message', (topic, payload) => {
@@ -592,8 +659,17 @@
         if (selectedKey && editingIdx === null) renderList();
         if (countAll(memos) > before) notify('📢 새 공유 메모가 도착했습니다.');
         else showToast('공유 메모가 업데이트되었습니다.', 'ok');
+      } else if (msg.type === 'accounts') {
+        if (msg.data && msg.data[ADMIN]) {
+          accounts = msg.data;
+          localStorage.setItem(accKey(), JSON.stringify(accounts));
+          if (session && !accounts[session.user]) doLogout('계정이 삭제되어 로그아웃되었습니다.');
+        }
       } else if (msg.type === 'sync-request') {
-        setTimeout(() => publish({ type: 'memos' }), Math.random() * 300);
+        setTimeout(() => {
+          publish({ type: 'memos' });
+          publishAccounts();
+        }, Math.random() * 300);
       }
     });
     client.on('close', () => setStatus(false));
@@ -685,6 +761,17 @@
   }
 
   /* ---------- 모달 ---------- */
+  function fmtAlarm(m) {
+    if (!m.alarmMin) return '';
+    const h = Math.floor(m.alarmMin / 60), mm = m.alarmMin % 60;
+    return (h ? h + '시간 ' : '') + (mm ? mm + '분' : '') + ' 전';
+  }
+  function memoLabel(m) {
+    return (m.private ? '🔒 ' : (m.important ? '★ ' : '')) +
+           (m.time ? `[${m.time}] ` : '') + m.text +
+           (m.image ? ' 📷' : '') +
+           ((m.alarmDay || m.alarmMin > 0) ? ' ⏰' : '');
+  }
   function openModal(key) {
     selectedKey = key;
     const [y, m, d] = key.split('-').map(Number);
@@ -819,17 +906,111 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addMemo(); }
   });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeTopModal();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
 
+  /* ---------- 알람 엔진 + 주간 요약 ---------- */
+  function memoDateTime(key, m) {
+    const [y, mo, d] = key.split('-').map(Number);
+    const [hh, mm] = (m.time || '09:00').split(':').map(Number);
+    return new Date(y, mo - 1, d, hh, mm, 0);
+  }
+  function getAlarmTimes(key, m) {
+    const dt = memoDateTime(key, m);
+    const arr = [];
+    if (m.alarmDay) { const d1 = new Date(dt); d1.setDate(d1.getDate() - 1); arr.push({ t: d1, type: 'day' }); }
+    if (m.alarmMin > 0) arr.push({ t: new Date(dt.getTime() - m.alarmMin * 60000), type: 'min' });
+    return arr;
+  }
+  let lastAlarmCheck = Date.now();
+  function checkAlarms() {
+    if (!session) return;
+    const nowT = Date.now();
+    const d = new Date();
+    const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    Object.entries(memos).forEach(([k, list]) => {
+      const [yy, mm, dd] = k.split('-').map(Number);
+      if (new Date(yy, mm - 1, dd).getTime() < todayStart) return;
+      (list || []).forEach(m => {
+        getAlarmTimes(k, m).forEach(a => {
+          const at = a.t.getTime();
+          if (at > lastAlarmCheck && at <= nowT) {
+            const label = a.type === 'day' ? '하루 전 알람' : `${fmtAlarm(m)} 알람`;
+            notify(`⏰ ${label} → ${m.text} (${+mm}/${+dd} ${m.time || '09:00'})`);
+          }
+        });
+      });
+    });
+    lastAlarmCheck = nowT;
+  }
+  function weekDates() {
+    const d = new Date();
+    const dow = (d.getDay() + 6) % 7;
+    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+    return [...Array(7)].map((_, i) => { const t = new Date(mon); t.setDate(mon.getDate() + i); return t; });
+  }
+  function openWeekly() {
+    const days = weekDates();
+    const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+    let total = 0;
+    weekBody.innerHTML = '';
+    days.forEach(t => {
+      const key = keyOf(t.getFullYear(), t.getMonth(), t.getDate());
+      const list = memos[key] || [];
+      if (!list.length) return;
+      total += list.length;
+      const hol = getHoliday(t.getFullYear(), t.getMonth(), t.getDate());
+      const sec = document.createElement('div');
+      sec.className = 'week-day';
+      sec.innerHTML = `<h3 class="${t.getDay() === 0 ? 'sun' : ''}">${t.getMonth() + 1}/${t.getDate()} (${DAY_NAMES[t.getDay()]})
+        ${hol ? `<span class="hol">${hol}</span>` : ''}${key === todayKey ? '<span class="today-tag">● 오늘</span>' : ''}</h3>`;
+      const ul = document.createElement('ul');
+      list.forEach(m => {
+        const li = document.createElement('li');
+        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '');
+        li.textContent = memoLabel(m);
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+      weekBody.appendChild(sec);
+    });
+    if (!total) weekBody.innerHTML = '<div class="empty">이번 주 메모가 없습니다.</div>';
+    weekTitle.textContent = `📋 주간 메모 정리 (${days[0].getMonth() + 1}/${days[0].getDate()} 월 ~ ${days[6].getMonth() + 1}/${days[6].getDate()} 일) · ${total}건`;
+    weekModal.classList.remove('hidden');
+  }
+  function checkWeekly() {
+    if (!session) return;
+    const d = new Date();
+    const hm = d.getHours() * 60 + d.getMinutes();
+    const weekKey = weekDates()[0].toDateString();
+    if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
+      localStorage.setItem('wk_mon_' + weekKey, '1');
+      notify('📋 주간 메모 정리 (월요일 09:30)');
+      openWeekly();
+    }
+    if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
+      localStorage.setItem('wk_fri_' + weekKey, '1');
+      notify('📋 주간 메모 정리 (금요일 15:30)');
+      openWeekly();
+    }
+  }
   setInterval(() => { checkAlarms(); checkWeekly(); }, 15000);
 
+  /* ---------- 시작 ---------- */
   updateBell();
-  updateStorage();
-  render();
-  buildImportant();
-  connectShare();
+  const savedSession = sessionStorage.getItem('session');
+  if (savedSession) {
+    try {
+      session = JSON.parse(savedSession);
+      TEAM = session.team;
+      accounts = loadAccounts();
+      if (accounts[session.user]) {
+        enterApp();
+      } else {
+        session = null;
+        sessionStorage.removeItem('session');
+      }
+    } catch (e) { session = null; }
+  }
 </script>
 </body>
 </html>
