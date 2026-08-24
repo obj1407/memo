@@ -56,6 +56,8 @@
              border-left:2px solid #3a414a;padding-left:6px;}
   .memo-line.imp{color:#ff8787;border-left-color:var(--red);}
   .memo-line.priv{color:var(--purple);border-left-color:#7e57c2;}
+  /* ★ 작업 완료 = 취소선 */
+  .memo-line.done{text-decoration:line-through;color:#6b7683;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;}
@@ -92,13 +94,14 @@
 
   .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;}
   .memo-list li{display:flex;align-items:center;gap:6px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
-  .memo-list li .star-btn,.memo-list li .lock-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
+  .memo-list li .star-btn,.memo-list li .lock-btn,.memo-list li .done-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
   .memo-list li .star-btn.on{color:var(--red);}
   .memo-list li .lock-btn.on{color:var(--purple);}
   .memo-list li .thumb{width:30px;height:30px;border-radius:4px;object-fit:cover;border:1px solid #333a43;cursor:zoom-in;}
   .memo-list li .txt{flex:1;word-break:break-all;}
   .memo-list li .txt.imp{color:#ff8787;}
   .memo-list li .txt.priv{color:var(--purple);}
+  .memo-list li .txt.done{text-decoration:line-through;color:var(--dim);}
   .memo-list li .act{background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:12px;}
   .memo-list li .del{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;}
   .empty{color:var(--dim);font-size:12px;margin-top:12px;text-align:center;}
@@ -115,11 +118,13 @@
   .saved-info{background:#12161b;border:1px solid #333a43;border-radius:8px;padding:14px;}
   .saved-info .date{color:var(--blue);font-size:13px;margin-bottom:8px;}
   .saved-info .text{font-size:14px;line-height:1.6;color:var(--text);word-break:break-all;}
+  .saved-info .text.done-txt{text-decoration:line-through;color:var(--dim);}
   .saved-info .meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--dim);}
   .saved-info .meta span{background:#232930;padding:3px 8px;border-radius:4px;}
   .saved-info .meta .red{color:#ff8787;}
   .saved-info .meta .pur{color:var(--purple);}
   .saved-info .meta .yel{color:var(--yellow);}
+  .saved-info .meta .grn{color:var(--green);}
   .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;cursor:zoom-in;}
 
   .week-body{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;}
@@ -131,6 +136,7 @@
   .week-day li{font-size:12.5px;color:#9aa4af;padding-left:8px;border-left:2px solid #3a414a;}
   .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
+  .week-day li.done{text-decoration:line-through;color:#6b7683;}
 
   .cleanup-box{width:560px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
   .cleanup-box h2{font-size:16px;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
@@ -219,7 +225,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8자리 · 계정 관리는 관리자만 가능<br>
-      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v3.0</b></div>
+      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v3.1</b></div>
   </div>
 </div>
 
@@ -348,7 +354,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '3.0';
+  const APP_VER = '3.1';
   console.log('캘린더 메모 v' + APP_VER + ' (GitHub 동기화)');
 
   const $ = s => document.querySelector(s);
@@ -635,10 +641,10 @@
       const arr = raw[k];
       if (!Array.isArray(arr)) return;
       const list = arr.map(x => typeof x === 'string'
-        ? { id: genId(), rev: 1, text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '', deleted: false }
+        ? { id: genId(), rev: 1, text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '', deleted: false, done: false }
         : { id: x.id || genId(), rev: x.rev || 1, text: String(x.text || ''), important: !!x.important, private: !!x.private,
             time: x.time || '', alarmDay: !!x.alarmDay, alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),
-            image: x.image || '', deleted: !!x.deleted });
+            image: x.image || '', deleted: !!x.deleted, done: !!x.done });
       if (list.length) out[k] = list;
     });
     return out;
@@ -672,9 +678,7 @@
     } catch (e) {}
   }
 
-  /* =====================================================
-     ★ GitHub 동기화 엔진 (v3.0)
-     ===================================================== */
+  /* ---------- GitHub 동기화 ---------- */
   let ghConfig = JSON.parse(localStorage.getItem('ghSync') || 'null') || {};
   let remoteSha = null, lastApplied = 0, lastPullOk = 0, syncing = false;
   const ghReady = () => !!(ghConfig.repo && ghConfig.token);
@@ -801,7 +805,7 @@
   setInterval(pull, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
 
-  /* ---------- GitHub 설정 모달 ---------- */
+  /* ---------- GitHub 설정 ---------- */
   function openGh() {
     ghRepoInput.value = ghConfig.repo || '';
     ghTokenInput.value = ghConfig.token || '';
@@ -850,7 +854,6 @@
         const norm = normalizeMemos(obj);
         if (!countAll(norm)) throw 0;
         const overwrite = confirm('확인을 누르면 현재 메모를 [덮어쓰기]하고,\n취소를 누르면 현재 메모에 [병합]됩니다.');
-        const base = Date.now();
         if (overwrite) memos = norm;
         else {
           Object.keys(norm).forEach(k => {
@@ -859,7 +862,6 @@
             memos[k] = exist.concat(norm[k].filter(m => !ids.has(m.id)));
           });
         }
-        Object.values(memos).forEach(arr => arr.forEach(m => { m.rev = (m.rev || 1) + base % 1000000; }));
         saveLocal(); render(); buildImportant();
         push();
         showToast('백업을 가져왔습니다.', 'ok');
@@ -1069,8 +1071,8 @@
         wrap.className = 'memos';
         list.slice(0, 4).forEach(m => {
           const line = document.createElement('div');
-          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '');
-          line.textContent = memoLabel(m);
+          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
+          line.textContent = (m.done ? '✅ ' : '') + memoLabel(m);
           wrap.appendChild(line);
         });
         if (list.length > 4) {
@@ -1129,12 +1131,20 @@
     list.forEach(m => {
       const li = document.createElement('li');
       const thumb = m.image ? `<img class="thumb" src="${m.image}" />` : '';
-      li.innerHTML = `<button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
+      li.innerHTML = `<button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : '⬜'}</button>
+                      <button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
                       <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
                       ${thumb}
-                      <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''}"></span>
+                      <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
       li.querySelector('.txt').textContent = memoLabel(m);
+      /* ★ 작업 완료 토글 */
+      li.querySelector('.done-btn').onclick = () => {
+        m.done = !m.done;
+        m.rev = Date.now();
+        afterChange();
+        showToast(m.done ? '✅ 작업 완료 처리되었습니다.' : '⬜ 완료 표시가 해제되었습니다.', 'ok');
+      };
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; m.rev = Date.now(); afterChange(); };
       li.querySelector('.lock-btn').onclick = () => { m.private = !m.private; m.rev = Date.now(); afterChange(); };
       const th = li.querySelector('.thumb');
@@ -1170,6 +1180,7 @@
     const tags = [];
     if (m.important) tags.push('<span class="red">★ 중요</span>');
     if (m.private) tags.push('<span class="pur">🔒 개인</span>');
+    if (m.done) tags.push('<span class="grn">✅ 작업 완료</span>');
     if (m.time) tags.push(`<span>⏰ ${m.time}</span>`);
     if (m.alarmDay) tags.push('<span class="yel">⏰ 하루 전 알람</span>');
     if (m.alarmMin > 0) tags.push(`<span class="yel">⏰ ${fmtAlarm(m)} 알람</span>`);
@@ -1177,7 +1188,7 @@
 
     savedInfo.innerHTML = `
       <div class="date">${y}년 ${mo}월 ${d}일 (${dayName})${hol ? ' · ' + hol : ''}</div>
-      <div class="text">${esc(m.text).replace(/\n/g, '<br>')}</div>
+      <div class="text ${m.done ? 'done-txt' : ''}">${esc(m.text).replace(/\n/g, '<br>')}</div>
       ${tags.length ? `<div class="meta">${tags.join('')}</div>` : ''}
       ${m.image ? `<img src="${m.image}" />` : ''}
     `;
@@ -1203,7 +1214,7 @@
       saved = {
         id: genId(), rev: Date.now(), text: t, important: impChk.checked, private: privChk.checked,
         time: timeInput.value || '', alarmDay: alarmDayChk.checked, alarmMin: totalMin,
-        image: currentImage || '', deleted: false
+        image: currentImage || '', deleted: false, done: false
       };
       (memos[selectedKey] ||= []).push(saved);
     }
@@ -1300,8 +1311,8 @@
       const ul = document.createElement('ul');
       list.forEach(m => {
         const li = document.createElement('li');
-        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '');
-        li.textContent = memoLabel(m);
+        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
+        li.textContent = (m.done ? '✅ ' : '') + memoLabel(m);
         ul.appendChild(li);
       });
       sec.appendChild(ul);
