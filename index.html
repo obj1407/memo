@@ -141,10 +141,12 @@
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
 
   /* 사진 정리 팝업 */
-  .cleanup-box{width:560px;max-width:92vw;background:#1b2027;border:1px solid #4a3434;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
+  .cleanup-box{width:560px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
   .cleanup-box h2{font-size:16px;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-  .cleanup-box .desc{font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+  .cleanup-box h2.ok{color:var(--green);}
+  .cleanup-box .desc{font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6;}
   .cleanup-box .desc b{color:var(--yellow);}
+  .cleanup-box .desc b.good{color:var(--green);}
   .cleanup-list{list-style:none;max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:8px;}
   .cleanup-item{display:flex;align-items:center;gap:10px;background:#232930;border:1px solid #333a43;border-radius:8px;padding:10px;}
   .cleanup-item .thumb{width:70px;height:70px;border-radius:6px;object-fit:cover;border:1px solid #333a43;cursor:zoom-in;flex-shrink:0;}
@@ -242,7 +244,7 @@
   <button id="jumpBtn">이동</button>
   <span class="share" title="실시간 공유 상태">
     <span id="shareStatus" class="dot"></span><span class="lbl">실시간 공유</span>
-    <button id="bellBtn" title="알림 켜기/끄기">🔔</button>
+    <button id="bellBtn" title="알람 켜기/끄기">🔔</button>
   </span>
   <span class="user-badge" id="userBadge"></span>
   <button id="acctBtn" style="display:none;">👥 계정</button>
@@ -323,11 +325,8 @@
 <!-- 사진 정리 팝업 -->
 <div class="modal hidden" id="cleanupModal">
   <div class="cleanup-box">
-    <h2>⚠️ 저장소 용량이 부족합니다</h2>
-    <div class="desc">
-      현재 저장소가 <b id="cleanupPct"></b> 사용 중입니다.<br>
-      아래 사진들을 삭제하여 공간을 확보하세요. <b>텍스트 메모는 유지</b>됩니다.
-    </div>
+    <h2 id="cleanupTitle">⚠️ 저장소 용량이 부족합니다</h2>
+    <div class="desc" id="cleanupDesc"></div>
     <ul class="cleanup-list" id="cleanupList"></ul>
     <div class="close-row"><button id="cleanupCloseBtn">나중에</button></div>
   </div>
@@ -359,7 +358,8 @@
         imgThumb = $('#imgThumb'), imgRemoveBtn = $('#imgRemoveBtn'),
         savedModal = $('#savedModal'), savedInfo = $('#savedInfo'),
         weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
-        cleanupModal = $('#cleanupModal'), cleanupList = $('#cleanupList'), cleanupPct = $('#cleanupPct'),
+        cleanupModal = $('#cleanupModal'), cleanupList = $('#cleanupList'),
+        cleanupTitle = $('#cleanupTitle'), cleanupDesc = $('#cleanupDesc'),
         lightbox = $('#lightbox'), lightboxImg = $('#lightboxImg'),
         storageInfo = $('#storageInfo'),
         toast = $('#toast');
@@ -370,7 +370,7 @@
   let impList = [], impIdx = 0;
   let currentImage = '';
   let TEAM = null, session = null, accounts = {};
-  let cleanupManuallyOpened = false;   // 사용자가 직접 연 건지
+  let cleanupManuallyOpened = false;
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
 
@@ -401,53 +401,61 @@
     const remainMB = Math.max(0, (QUOTA - used) / 1048576);
     storageInfo.textContent = `💾 ${pct.toFixed(1)}% 사용 · ${remainMB.toFixed(1)}MB 남음`;
     storageInfo.className = 'storage' + (pct > 80 ? ' warn' : (pct > 50 ? ' mid' : ''));
-    
-    const crossed80 = lastPct < 80 && pct >= 80;
+
     lastPct = pct;
-    
-    /* 80% 초과 시 자동 팝업 (수동으로 열었던 적이 없을 때만) */
+
+    /* ★ 80% 이상일 때만 자동 팝업 */
     if (pct >= 80 && session && !cleanupManuallyOpened && cleanupModal.classList.contains('hidden')) {
-      openCleanup(true);
+      openCleanup();
     }
-    /* 80% 아래로 내려오면 수동 플래그 초기화 → 다음에 또 자동으로 뜰 수 있게 */
+    /* 80% 아래로 내려오면 자동 닫힘 + 플래그 초기화 */
     if (pct < 80) {
       cleanupManuallyOpened = false;
       if (!cleanupModal.classList.contains('hidden')) {
         cleanupModal.classList.add('hidden');
-        showToast('✓ 용량이 충분해졌습니다.', 'ok');
+        showToast('✓ 저장소 용량이 충분합니다.', 'ok');
       }
     }
-    /* 팝업 열려 있으면 리스트 갱신 */
+    /* 팝업이 열려 있으면 내용 갱신 */
     if (!cleanupModal.classList.contains('hidden')) {
       renderCleanupList();
     }
   }
 
   /* ---------- 사진 정리 팝업 ---------- */
-  function openCleanup(auto) {
+  function openCleanup() {
     if (!session) return;
-    if (!auto) cleanupManuallyOpened = true;
     renderCleanupList();
     cleanupModal.classList.remove('hidden');
   }
   function renderCleanupList() {
+    const json = localStorage.getItem(memKey()) || '';
+    const used = json.length * 2;
+    const pct = Math.min(100, (used / QUOTA) * 100);
+
+    /* ★ 용량 상태에 따라 제목/설명 변경 */
+    if (pct >= 80) {
+      cleanupTitle.textContent = '⚠️ 저장소 용량이 부족합니다';
+      cleanupTitle.classList.remove('ok');
+      cleanupDesc.innerHTML = `현재 저장소가 <b>${pct.toFixed(1)}%</b> 사용 중입니다.<br>
+        아래 사진들을 삭제하여 공간을 확보하세요. <b>텍스트 메모는 유지</b>됩니다.`;
+    } else {
+      cleanupTitle.textContent = '✅ 저장소 용량이 충분합니다';
+      cleanupTitle.classList.add('ok');
+      cleanupDesc.innerHTML = `현재 저장소가 <b class="good">${pct.toFixed(1)}%</b> 사용 중으로 여유 공간이 충분합니다.<br>
+        필요하면 오래된 사진부터 정리할 수 있습니다. <b>텍스트 메모는 유지</b>됩니다.`;
+    }
+
     const items = [];
     Object.entries(memos).forEach(([k, list]) => {
       list.forEach(m => {
         if (m.image) {
-          /* base64 크기 근사: base64 문자열 길이 ≈ 실제 바이트 * 4/3 */
           const sizeBytes = Math.round(m.image.length * 0.75);
           items.push({ key: k, id: m.id, memo: m, sizeBytes, date: k });
         }
       });
     });
-    /* 오래된 날짜 → 큰 용량 순 */
     items.sort((a, b) => a.date.localeCompare(b.date) || (b.sizeBytes - a.sizeBytes));
-
-    const json = localStorage.getItem(memKey()) || '';
-    const used = json.length * 2;
-    const pct = Math.min(100, (used / QUOTA) * 100);
-    cleanupPct.textContent = pct.toFixed(1) + '%';
 
     cleanupList.innerHTML = '';
     if (!items.length) {
@@ -496,7 +504,7 @@
   }
   $('#cleanupCloseBtn').onclick = () => {
     cleanupModal.classList.add('hidden');
-    cleanupManuallyOpened = true;   // 나중에 버튼 누르면 더 이상 자동 안 열림
+    cleanupManuallyOpened = true;
   };
   cleanupModal.addEventListener('click', e => {
     if (e.target === cleanupModal) {
@@ -504,7 +512,48 @@
       cleanupManuallyOpened = true;
     }
   });
-  storageInfo.onclick = () => { if (session) openCleanup(false); };
+  storageInfo.onclick = () => { if (session) openCleanup(); };
+
+  /* ---------- 사진 첨부 (복원) ---------- */
+  imgFile.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) {
+      alert('이미지 파일(JPG/PNG 등)만 업로드 가능합니다.');
+      imgFile.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 640;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+          else { width = Math.round(width * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        currentImage = canvas.toDataURL('image/jpeg', 0.7);
+        imgThumb.src = currentImage;
+        imgPreview.classList.remove('hidden');
+        showToast('📷 사진이 첨부되었습니다.', 'ok');
+      };
+      img.onerror = () => alert('이미지를 불러올 수 없습니다. 다른 파일로 시도해 주세요.');
+      img.src = ev.target.result;
+    };
+    reader.onerror = () => alert('파일을 읽을 수 없습니다.');
+    reader.readAsDataURL(f);
+    imgFile.value = '';
+  };
+  imgRemoveBtn.onclick = () => {
+    currentImage = '';
+    imgThumb.src = '';
+    imgPreview.classList.add('hidden');
+  };
+  imgThumb.onclick = () => { if (currentImage) openLightbox(currentImage); };
 
   /* ---------- 뒤로가기 ---------- */
   function anyModalOpen() {
@@ -642,7 +691,7 @@
     } catch (e) {
       showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err');
       updateStorage();
-      openCleanup(false);
+      openCleanup();
     }
   }
   function migrateLegacy() {
@@ -860,7 +909,7 @@
     const id = idInput.value.trim();
     const pw = pwInput.value.trim();
     if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
-    
+
     TEAM = team;
     let localAcc = loadAccountsLocal(team);
     if (localAcc[id] && localAcc[id].pw === pw) {
@@ -899,7 +948,7 @@
     loadMemos();
     migrateLegacy();
     updateStorage(); render(); buildImportant();
-    
+
     if (preConnect) {
       client = preConnect;
       preConnect = null;
