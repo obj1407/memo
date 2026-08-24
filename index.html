@@ -4,7 +4,26 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>캘린더 메모</title>
-<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>" />
+<script>
+  /* MQTT 라이브러리 다중 CDN 폴백 로더 */
+  (function loadMqtt(sources) {
+    if (!sources.length) {
+      console.warn('MQTT 라이브러리를 불러오지 못했습니다. 공유 기능이 비활성화됩니다.');
+      window.__mqttFailed = true;
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = sources[0];
+    s.onload = () => console.log('MQTT 로드 성공:', sources[0]);
+    s.onerror = () => { console.warn('CDN 실패:', sources[0]); s.remove(); loadMqtt(sources.slice(1)); };
+    document.head.appendChild(s);
+  })([
+    'https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js',
+    'https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js',
+    'https://unpkg.com/mqtt/dist/mqtt.min.js'
+  ]);
+</script>
 <style>
   :root{
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
@@ -455,7 +474,7 @@
     return null;
   }
 
-  /* ---------- 메모 데이터 정규화 ---------- */
+  /* ---------- 메모 정규화 ---------- */
   function normalizeMemos(raw) {
     const out = {};
     Object.keys(raw || {}).forEach(k => {
@@ -472,7 +491,7 @@
     return out;
   }
 
-  /* ---------- 메모 저장/불러오기 ---------- */
+  /* ---------- 메모 저장 ---------- */
   let memos = {};
   function loadMemos() {
     let parsed = null;
@@ -483,7 +502,6 @@
     try { localStorage.setItem(memKey(), JSON.stringify(memos)); updateStorage(); }
     catch (e) { showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err'); updateStorage(); }
   }
-  /* 이전 버전(calMemos) 데이터 자동 복구 */
   function migrateLegacy() {
     if (countAll(memos) > 0) return;
     const old = localStorage.getItem('calMemos');
@@ -520,7 +538,7 @@
     r.onload = ev => {
       try {
         let obj = JSON.parse(ev.target.result);
-        if (obj && obj.memos) obj = obj.memos;              // 내보내기 형식 지원
+        if (obj && obj.memos) obj = obj.memos;
         if (typeof obj !== 'object' || Array.isArray(obj)) throw 0;
         const norm = normalizeMemos(obj);
         if (!countAll(norm)) throw 0;
@@ -622,7 +640,7 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 로그인/로그아웃/자동 로그아웃 ---------- */
+  /* ---------- 로그인/로그아웃 ---------- */
   loginBtn.onclick = () => {
     const team = teamInput.value.trim() || 'our-team';
     const id = idInput.value.trim();
@@ -645,8 +663,15 @@
     loadMemos();
     migrateLegacy();
     updateStorage(); render(); buildImportant();
-    connectShare();
+    waitForMqtt(connectShare);
     lastActivity = Date.now();
+  }
+  /* 라이브러리 지연 로드 대기 (최대 10초) */
+  function waitForMqtt(cb, tries = 10) {
+    if (typeof mqtt !== 'undefined') return cb();
+    if (window.__mqttFailed) { showToast('공유 라이브러리 로드 실패로 공유가 꺼졌습니다.', 'err'); return; }
+    if (tries <= 0) { showToast('공유 라이브러리를 불러오지 못해 공유가 꺼졌습니다.', 'err'); return; }
+    setTimeout(() => waitForMqtt(cb, tries - 1), 1000);
   }
   function doLogout(msg) {
     if (client) { client.end(); client = null; }
