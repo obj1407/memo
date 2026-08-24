@@ -56,7 +56,6 @@
              border-left:2px solid #3a414a;padding-left:6px;}
   .memo-line.imp{color:#ff8787;border-left-color:var(--red);}
   .memo-line.priv{color:var(--purple);border-left-color:#7e57c2;}
-  /* ★ 작업 완료 = 취소선 */
   .memo-line.done{text-decoration:line-through;color:#6b7683;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
@@ -211,7 +210,6 @@
   <div class="login-box">
     <div class="login-top"><button id="ghOpenBtn1">⚙️ 동기화 설정</button></div>
     <h1>📅 캘린더 메모 로그인</h1>
-    <div class="field"><label>팀 코드</label><input id="teamInput" value="our-team" /></div>
     <div class="field"><label>아이디</label><input id="idInput" autocomplete="username" /></div>
     <div class="field"><label>비밀번호 (숫자만)</label><input id="pwInput" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password" /></div>
     <div class="field"><label>미사용 시 자동 로그아웃</label>
@@ -224,8 +222,8 @@
     </div>
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
-    <div class="hint">비밀번호는 숫자 4~8자리 · 계정 관리는 관리자만 가능<br>
-      팀 코드가 같아야 공유됩니다 · 앱 버전 <b>v3.1</b></div>
+    <div class="hint">비밀번호는 숫자 4~8자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
+      앱 버전 <b>v3.2</b></div>
   </div>
 </div>
 
@@ -248,6 +246,7 @@
     <button id="bellBtn" title="알람 켜기/끄기">🔔</button>
   </span>
   <span class="user-badge" id="userBadge"></span>
+  <button id="pwChangeBtn" title="내 비밀번호 변경">🔑</button>
   <button id="acctBtn" style="display:none;">👥 계정</button>
   <button id="logoutBtn" title="로그아웃">🚪</button>
   <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기"></span>
@@ -283,7 +282,7 @@
     </div>
     <div class="img-upload">
       <label class="up-btn">📷 사진 첨부<input type="file" id="imgFile" accept="image/*" style="display:none" /></label>
-      <span class="help">자동 압축(640px) 후 팀과 공유됩니다</span>
+      <span class="help">자동 압축(640px) 후 공유됩니다</span>
     </div>
     <div class="img-preview hidden" id="imgPreview">
       <img id="imgThumb" />
@@ -329,8 +328,8 @@
     <div class="field"><label>저장소 (소유자/저장소명)</label><input id="ghRepoInput" placeholder="예: obj03/memo" /></div>
     <div class="field"><label>Personal Access Token (repo 권한)</label><input id="ghTokenInput" type="password" placeholder="ghp_..." /></div>
     <div class="mini-hint">
-      · 토큰 발급: GitHub → Settings → Developer settings → Tokens(classic) → <b>repo</b> 체크<br>
-      · 저장소에 <b>calmemo-data/팀코드.json</b> 파일이 자동 생성됩니다<br>
+      · 토 발급: GitHub → Settings → Developer settings → Tokens(classic) → <b>repo</b> 체크<br>
+      · 저장소에 <b>calmemo-data/our-team.json</b> 파일이 자동 생성됩니다<br>
       · 설정은 이 기기 브라우저에만 저장됩니다
     </div>
     <div class="close-row">
@@ -354,15 +353,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '3.1';
+  const APP_VER = '3.2';
   console.log('캘린더 메모 v' + APP_VER + ' (GitHub 동기화)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid'), ticker = $('#ticker');
-  const loginWrap = $('#loginWrap'), teamInput = $('#teamInput'), idInput = $('#idInput'),
+  const loginWrap = $('#loginWrap'), idInput = $('#idInput'),
         pwInput = $('#pwInput'), logoutSel = $('#logoutSel'), loginBtn = $('#loginBtn'),
         syncIndicator = $('#syncIndicator'),
-        userBadge = $('#userBadge'), acctBtn = $('#acctBtn'), logoutBtn = $('#logoutBtn'),
+        userBadge = $('#userBadge'), pwChangeBtn = $('#pwChangeBtn'),
+        acctBtn = $('#acctBtn'), logoutBtn = $('#logoutBtn'),
         acctModal = $('#acctModal'), acctList = $('#acctList'),
         newId = $('#newId'), newPw = $('#newPw'),
         exportBtn = $('#exportBtn'), importBtn = $('#importBtn'), importFile = $('#importFile'),
@@ -390,14 +390,15 @@
   let selectedKey = null, editingMemo = null;
   let impList = [], impIdx = 0;
   let currentImage = '';
-  let TEAM = teamInput.value.trim() || 'our-team';
+  const TEAM = 'our-team';   // 단일 공유 공간
   let session = null;
   let accounts = {};
   let memos = {};
   let cleanupManuallyOpened = false;
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
- const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -766,7 +767,7 @@
             if (afterCount > beforeCount) notify('📢 새 공유 메모가 도착했습니다.');
             else if (afterCount !== beforeCount) showToast('공유 메모가 업데이트되었습니다.', 'ok');
           } else {
-            syncIndicator.textContent = '✓ 팀 계정 동기화 완료';
+            syncIndicator.textContent = '✓ 계정 동기화 완료';
           }
         }
       }
@@ -817,7 +818,7 @@
   ghModal.addEventListener('click', e => { if (e.target === ghModal) ghModal.classList.add('hidden'); });
   $('#ghSaveBtn').onclick = () => {
     const repo = ghRepoInput.value.trim(), token = ghTokenInput.value.trim();
-    if (!repo || !token) return alert('저장소와 토을 모두 입력하세요.');
+    if (!repo || !token) return alert('저장소와 토큰을 모두 입력하세요.');
     ghConfig = { repo, token };
     localStorage.setItem('ghSync', JSON.stringify(ghConfig));
     ghModal.classList.add('hidden');
@@ -836,7 +837,7 @@
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `메모백업_${TEAM}_${keyOf(now.getFullYear(), now.getMonth(), now.getDate())}.json`;
+    a.download = `메모백업_${keyOf(now.getFullYear(), now.getMonth(), now.getDate())}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
     showToast('백업 파일을 내보냈습니다.', 'ok');
@@ -931,25 +932,29 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 로그인/로그아웃 ---------- */
-  teamInput.addEventListener('input', () => {
-    TEAM = teamInput.value.trim() || 'our-team';
-    if (ghReady()) {
-      syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
-      lastApplied = 0;
-      pull();
-    } else {
-      syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
-    }
-  });
+  /* ★ 모든 계정: 내 비밀번호 직접 변경 */
+  pwChangeBtn.onclick = () => {
+    if (!session) return;
+    const me = activeAccounts()[session.user];
+    if (!me) return;
+    const cur = prompt('현재 비밀번호를 입력하세요');
+    if (cur === null) return;
+    if (cur !== me.pw) return alert('현재 비밀번호가 올바르지 않습니다.');
+    const npw = prompt('새 비밀번호를 입력하세요 (숫자 4~8자)', '');
+    if (npw === null) return;
+    if (!validPw(npw.trim())) return alert('비밀번호는 숫자 4~8자여야 합니다.');
+    me.pw = npw.trim();
+    me.rev = Date.now();
+    saveLocal(); push();
+    showToast('🔑 비밀번호가 변경되었습니다.', 'ok');
+  };
 
+  /* ---------- 로그인/로그아웃 ---------- */
   loginBtn.onclick = async () => {
-    const team = teamInput.value.trim() || 'our-team';
     const id = idInput.value.trim();
     const pw = pwInput.value.trim();
     if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
 
-    TEAM = team;
     loadLocalCache();
     migrateLegacy();
 
@@ -968,7 +973,7 @@
       return;
     }
 
-    session = { team, user: id, timeoutMin: +logoutSel.value };
+    session = { team: TEAM, user: id, timeoutMin: +logoutSel.value };
     sessionStorage.setItem('session', JSON.stringify(session));
     enterApp();
   };
@@ -976,7 +981,7 @@
   function enterApp() {
     loginWrap.style.display = 'none';
     syncIndicator.textContent = '';
-    userBadge.textContent = `👤 ${session.user} · ${session.team} · v${APP_VER}`;
+    userBadge.textContent = `👤 ${session.user} · v${APP_VER}`;
     acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
     updateStorage(); render(); buildImportant();
     updateStatus();
@@ -995,7 +1000,7 @@
     loginBtn.disabled = false;
     loginBtn.textContent = '로그인';
     updateStatus();
-    syncIndicator.textContent = ghReady() ? '🔄 팀 계정 동기화 중...' : '⚙️ 동기화 설정이 필요합니다';
+    syncIndicator.textContent = ghReady() ? '🔄 계정 동기화 중...' : '⚙️ 동기화 설정이 필요합니다';
     pull();
     if (msg) setTimeout(() => alert(msg), 100);
   }
@@ -1106,14 +1111,14 @@
            (m.image ? ' 📷' : '') +
            ((m.alarmDay || m.alarmMin > 0) ? ' ⏰' : '');
   }
-    function openModal(key) {
+  function openModal(key) {
     selectedKey = key;
     const [y, m, d] = key.split('-').map(Number);
     const h = getHoliday(y, m - 1, d);
     modalTitle.textContent = `${y}년 ${m}월 ${d}일 메모` + (h ? ` (${h})` : '');
     resetEdit(); renderList();
     modal.classList.remove('hidden');
-    if (!isMobile) memoInput.focus();   // ★ PC만 자동 포커스, 모바일은 터치 시에만 키보드
+    if (!isMobile) memoInput.focus();   // 모바일은 터치 시에만 키보드
   }
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
@@ -1138,7 +1143,6 @@
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
       li.querySelector('.txt').textContent = memoLabel(m);
-      /* ★ 작업 완료 토글 */
       li.querySelector('.done-btn').onclick = () => {
         m.done = !m.done;
         m.rev = Date.now();
@@ -1343,7 +1347,7 @@
   /* ---------- 시작 ---------- */
   updateBell();
   updateStatus();
-  if (ghReady()) syncIndicator.textContent = '🔄 팀 계정 동기화 중...';
+  if (ghReady()) syncIndicator.textContent = '🔄 계정 동기화 중...';
   else syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
   pull();
 
@@ -1351,7 +1355,6 @@
   if (savedSession) {
     try {
       session = JSON.parse(savedSession);
-      TEAM = session.team;
       loadLocalCache();
       if (activeAccounts()[session.user]) enterApp();
       else { session = null; sessionStorage.removeItem('session'); }
