@@ -397,7 +397,7 @@
   let cleanupManuallyOpened = false;
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
-
+ const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1106,14 +1106,14 @@
            (m.image ? ' 📷' : '') +
            ((m.alarmDay || m.alarmMin > 0) ? ' ⏰' : '');
   }
-  function openModal(key) {
+    function openModal(key) {
     selectedKey = key;
     const [y, m, d] = key.split('-').map(Number);
     const h = getHoliday(y, m - 1, d);
     modalTitle.textContent = `${y}년 ${m}월 ${d}일 메모` + (h ? ` (${h})` : '');
     resetEdit(); renderList();
     modal.classList.remove('hidden');
-    memoInput.focus();
+    if (!isMobile) memoInput.focus();   // ★ PC만 자동 포커스, 모바일은 터치 시에만 키보드
   }
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
