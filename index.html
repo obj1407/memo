@@ -126,7 +126,6 @@
   .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
 
-  /* 로그인 화면 */
   .login-wrap{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;}
   .login-box{width:380px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:12px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
   .login-box h1{font-size:20px;text-align:center;margin-bottom:22px;}
@@ -137,7 +136,6 @@
   .login-box #loginBtn{width:100%;margin-top:8px;background:var(--blue);border:none;color:#fff;border-radius:6px;padding:11px;cursor:pointer;font-size:14px;font-weight:600;}
   .login-box .hint{margin-top:14px;font-size:11px;color:var(--dim);line-height:1.6;text-align:center;}
 
-  /* 계정 관리 */
   .acct-create{display:flex;gap:8px;flex-wrap:wrap;}
   .acct-create input{flex:1;min-width:100px;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
   .acct-create button{background:var(--green);border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;}
@@ -193,7 +191,8 @@
     <button id="loginBtn">로그인</button>
     <div class="hint">관리자 계정: <b>obj1407</b> / 초기 비밀번호 <b>1407</b><br>
       비밀번호는 숫자 4~8자리 · 계정 관리(생성/수정/삭제)는 관리자만 가능<br>
-      팀 코드가 같아야 같은 팀으로 공유됩니다.</div>
+      팀 코드가 같아야 같은 팀으로 공유됩니다.<br>
+      처음 로그인 시 이전 버전의 메모가 자동 복구됩니다.</div>
   </div>
 </div>
 
@@ -205,6 +204,9 @@
   <button id="todayBtn">오늘</button>
   <button id="weekBtn" title="이번 주 메모 요약">📋 주간</button>
   <button id="refreshBtn" title="새로고침">🔄</button>
+  <button id="exportBtn" title="백업 파일 내보내기">📤</button>
+  <button id="importBtn" title="백업 파일 가져오기">📥</button>
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none" />
   <input type="date" id="dateJump" />
   <button id="jumpBtn">이동</button>
   <span class="share" title="실시간 공유 상태">
@@ -277,7 +279,7 @@
   </div>
 </div>
 
-<!-- 계정 관리 모달 (관리자 전용) -->
+<!-- 계정 관리 모달 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
     <h2>👥 계정 관리 (관리자 전용)</h2>
@@ -304,6 +306,7 @@
         userBadge = $('#userBadge'), acctBtn = $('#acctBtn'), logoutBtn = $('#logoutBtn'),
         acctModal = $('#acctModal'), acctList = $('#acctList'),
         newId = $('#newId'), newPw = $('#newPw'),
+        exportBtn = $('#exportBtn'), importBtn = $('#importBtn'), importFile = $('#importFile'),
         modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
         impChk = $('#impChk'), privChk = $('#privChk'),
@@ -375,7 +378,6 @@
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', () => {
     if (loginWrap.style.display !== 'none' && loginWrap.style.display !== '') {
-      // 로그인 화면에서 뒤로가기 → 종료 확인
       if (confirm('종료하시겠습니까?')) { window.close(); history.back(); }
       else history.pushState(null, '', location.href);
       return;
@@ -453,23 +455,96 @@
     return null;
   }
 
-  /* ---------- 메모 저장 ---------- */
+  /* ---------- 메모 데이터 정규화 ---------- */
+  function normalizeMemos(raw) {
+    const out = {};
+    Object.keys(raw || {}).forEach(k => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+      const arr = raw[k];
+      if (!Array.isArray(arr)) return;
+      const list = arr.map(x => typeof x === 'string'
+        ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }
+        : { id: x.id || genId(), text: String(x.text || ''), important: !!x.important, private: !!x.private,
+            time: x.time || '', alarmDay: !!x.alarmDay,
+            alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60), image: x.image || '' });
+      if (list.length) out[k] = list;
+    });
+    return out;
+  }
+
+  /* ---------- 메모 저장/불러오기 ---------- */
   let memos = {};
   function loadMemos() {
-    try { memos = JSON.parse(localStorage.getItem(memKey())) || {}; } catch (e) { memos = {}; }
-    Object.keys(memos).forEach(k => {
-      memos[k] = memos[k].map(x => typeof x === 'string'
-        ? { id: genId(), text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '' }
-        : { id: x.id || genId(), text: x.text, important: !!x.important, private: !!x.private,
-            time: x.time || '', alarmDay: !!x.alarmDay,
-            alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),
-            image: x.image || '' });
-    });
+    let parsed = null;
+    try { parsed = JSON.parse(localStorage.getItem(memKey())); } catch (e) {}
+    memos = normalizeMemos(parsed);
   }
   function save() {
     try { localStorage.setItem(memKey(), JSON.stringify(memos)); updateStorage(); }
     catch (e) { showToast('저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err'); updateStorage(); }
   }
+  /* 이전 버전(calMemos) 데이터 자동 복구 */
+  function migrateLegacy() {
+    if (countAll(memos) > 0) return;
+    const old = localStorage.getItem('calMemos');
+    if (!old) return;
+    try {
+      const norm = normalizeMemos(JSON.parse(old));
+      if (countAll(norm)) {
+        memos = norm;
+        save();
+        showToast('이전 버전의 메모를 복구했습니다.', 'ok');
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- 백업 내보내기/가져오기 ---------- */
+  exportBtn.onclick = () => {
+    if (!session) return;
+    const data = { app: 'calendar-memo', team: TEAM, exportedAt: new Date().toISOString(), memos };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `메모백업_${TEAM}_${keyOf(now.getFullYear(), now.getMonth(), now.getDate())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    showToast('백업 파일을 내보냈습니다.', 'ok');
+  };
+  importBtn.onclick = () => importFile.click();
+  importFile.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        let obj = JSON.parse(ev.target.result);
+        if (obj && obj.memos) obj = obj.memos;              // 내보내기 형식 지원
+        if (typeof obj !== 'object' || Array.isArray(obj)) throw 0;
+        const norm = normalizeMemos(obj);
+        if (!countAll(norm)) throw 0;
+        const overwrite = confirm('확인을 누르면 현재 메모를 [덮어쓰기]하고,\n취소를 누르면 현재 메모에 [병합]됩니다.');
+        if (overwrite) {
+          memos = norm;
+        } else {
+          Object.keys(norm).forEach(k => {
+            const exist = memos[k] || [];
+            const ids = new Set(exist.map(m => m.id));
+            const add = norm[k].filter(m => !ids.has(m.id));
+            memos[k] = exist.concat(add);
+          });
+        }
+        save(); render(); buildImportant();
+        publish({ type: 'memos' });
+        showToast('백업을 가져왔습니다.', 'ok');
+      } catch (err) {
+        alert('가져오기 실패: 올바른 백업 파일이 아닙니다.');
+      }
+      importFile.value = '';
+    };
+    r.readAsText(f);
+  };
 
   /* ---------- 계정 관리 ---------- */
   function loadAccounts() {
@@ -547,7 +622,7 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ---------- 로그인 / 로그아웃 / 자동 로그아웃 ---------- */
+  /* ---------- 로그인/로그아웃/자동 로그아웃 ---------- */
   loginBtn.onclick = () => {
     const team = teamInput.value.trim() || 'our-team';
     const id = idInput.value.trim();
@@ -568,6 +643,7 @@
     userBadge.textContent = `👤 ${session.user} · ${session.team}`;
     acctBtn.style.display = session.user === ADMIN ? 'inline-block' : 'none';
     loadMemos();
+    migrateLegacy();
     updateStorage(); render(); buildImportant();
     connectShare();
     lastActivity = Date.now();
@@ -589,7 +665,6 @@
   $('#acctCloseBtn').onclick = () => acctModal.classList.add('hidden');
   acctModal.addEventListener('click', e => { if (e.target === acctModal) acctModal.classList.add('hidden'); });
 
-  /* 자동 로그아웃 (미사용 감지) */
   let lastActivity = Date.now();
   ['pointerdown','keydown','touchstart','mousemove'].forEach(ev =>
     document.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true }));
@@ -1003,12 +1078,8 @@
       session = JSON.parse(savedSession);
       TEAM = session.team;
       accounts = loadAccounts();
-      if (accounts[session.user]) {
-        enterApp();
-      } else {
-        session = null;
-        sessionStorage.removeItem('session');
-      }
+      if (accounts[session.user]) enterApp();
+      else { session = null; sessionStorage.removeItem('session'); }
     } catch (e) { session = null; }
   }
 </script>
