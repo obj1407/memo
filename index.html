@@ -121,7 +121,7 @@
   .saved-info .meta .grn{color:var(--green);}
   .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;cursor:zoom-in;}
 
-  /* ★ 주간 요약: 크기 고정 + 내부 스크롤 */
+  /* 주간 요약: 크기 고정 + 내부 스크롤 */
   .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .week-nav button{background:#232930;border:1px solid #333a43;color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;}
   .week-nav button:hover{background:#2d343c;}
@@ -137,7 +137,7 @@
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
   .week-day li.done{text-decoration:line-through;color:#6b7683;}
 
-  /* ★ 도구 패널 */
+  /* 도구 패널 */
   .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
   .tool-btn{display:flex;align-items:center;gap:8px;background:#232930;border:1px solid #333a43;color:var(--text);
             border-radius:8px;padding:12px 14px;cursor:pointer;font-size:13px;text-align:left;}
@@ -231,7 +231,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v3.4</b></div>
+      앱 버전 <b>v3.5</b></div>
   </div>
 </div>
 
@@ -353,7 +353,7 @@
   </div>
 </div>
 
-<!-- ★ 도구 패널 -->
+<!-- 도구 패널 -->
 <div class="modal hidden" id="toolsModal">
   <div class="modal-box">
     <h2>🧰 도구</h2>
@@ -372,7 +372,7 @@
 </div>
 <input type="file" id="importFile" accept=".json,application/json" style="display:none" />
 
-<!-- 날짜 이동(도구 안) -->
+<!-- 날짜 이동 -->
 <div class="modal hidden" id="dateModal">
   <div class="modal-box" style="width:340px">
     <h2>📅 날짜 이동</h2>
@@ -398,7 +398,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '3.4';
+  const APP_VER = '3.5';
   console.log('캘린더 메모 v' + APP_VER + ' (GitHub 동기화)');
 
   const $ = s => document.querySelector(s);
@@ -417,7 +417,7 @@
         alarmTimeChk = $('#alarmTimeChk'), alarmH = $('#alarmH'), alarmM = $('#alarmM'),
         addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
         yearSel = $('#yearSel'), monthSel = $('#monthSel'), dateJump = $('#dateJump'),
-        shareStatus = $('#shareStatus'), bellBtn = $('#bellBtn'),
+        shareStatus = $('#shareStatus'),
         ghModal = $('#ghModal'), ghRepoInput = $('#ghRepoInput'), ghTokenInput = $('#ghTokenInput'),
         imgFile = $('#imgFile'), imgPreview = $('#imgPreview'),
         imgThumb = $('#imgThumb'), imgRemoveBtn = $('#imgRemoveBtn'),
@@ -625,7 +625,11 @@
       o.stop(audioCtx.currentTime + dur);
     } catch (e) {}
   }
-  function updateBell() { bellBtn.textContent = alarmOn ? '🔔' : '🔕'; }
+  /* ★ 수정: 도구 패널의 알람 버튼에 상태 표시 */
+  function updateBell() {
+    const b = $('#tBell');
+    if (b) b.innerHTML = `<span class="ico">${alarmOn ? '🔔' : '🔕'}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
+  }
   function notify(msg) {
     showToast(msg, 'ok');
     if (!alarmOn) return;
@@ -643,7 +647,6 @@
       notify('알람이 켜졌습니다.');
     } else showToast('알람이 꺼졌습니다.');
   }
-  bellBtn.onclick = toggleAlarm;
   document.addEventListener('click', ensureAudio, { passive: true });
   document.addEventListener('touchstart', ensureAudio, { passive: true });
   document.addEventListener('keydown', ensureAudio, { passive: true });
@@ -1009,9 +1012,10 @@
     if (msg) setTimeout(() => alert(msg), 100);
   }
 
-  /* ---------- 도구 패널 연결 ---------- */
+  /* ---------- 도구 패널 ---------- */
   $('#toolsBtn').onclick = () => {
     $('#tAcct').style.display = (session && session.user === ADMIN) ? 'flex' : 'none';
+    updateBell();
     toolsModal.classList.remove('hidden');
   };
   $('#toolsCloseBtn').onclick = () => toolsModal.classList.add('hidden');
