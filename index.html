@@ -258,7 +258,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8 자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v4.1</b> (메모 정렬 + 주간 내보내기)</div>
+      앱 버전 <b>v4.2</b> (버그 수정)</div>
   </div>
 </div>
 
@@ -271,7 +271,7 @@
   </span>
   <button id="nextBtn">›</button>
   <button id="todayBtn">오늘</button>
-  <button id="weekBtn">📋 주간</button>
+  <button id="weekBtn"> 주간</button>
   <button id="refreshBtn">🔄</button>
   <button id="toolsBtn">☰ 도구</button>
 </div>
@@ -362,7 +362,7 @@
 <!-- 계정 관리 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
-    <h2> 계정 관리 (관리자 전용)</h2>
+    <h2>👥 계정 관리 (관리자 전용)</h2>
     <div class="acct-create">
       <input id="newId" placeholder="새 아이디 (영문/숫자 3~20 자)" maxlength="20" />
       <input id="newPw" type="password" inputmode="numeric" maxlength="8" placeholder="비밀번호 (숫자 4~8 자)" />
@@ -376,7 +376,7 @@
 <!-- GitHub 동기화 설정 -->
 <div class="modal hidden" id="ghModal">
   <div class="modal-box">
-    <h2>⚙️ GitHub 동기화 설정</h2>
+    <h2>️ GitHub 동기화 설정</h2>
     <div class="field"><label>저장소 (소유자/저장소명)</label><input id="ghRepoInput" placeholder="예: obj03/memo" /></div>
     <div class="field"><label>Personal Access Token (repo 권한)</label><input id="ghTokenInput" type="password" placeholder="ghp_..." /></div>
     <div class="mini-hint">
@@ -445,8 +445,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.1';
-  console.log('캘린더 메모 v' + APP_VER + ' (메모 정렬 + 주간 내보내기)');
+  const APP_VER = '4.2';
+  console.log('캘린더 메모 v' + APP_VER + ' (버그 수정)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
@@ -572,7 +572,7 @@
           <div class="t">${esc(shortText)}</div>
           <div class="sz">📷 ${sizeStr}</div>
         </div>
-        <button class="del"> 삭제</button>`;
+        <button class="del">🗑 삭제</button>`;
       li.querySelector('.thumb').onclick = () => openLightbox(it.memo.image);
       li.querySelector('.del').onclick = () => {
         if (!confirm('이 사진만 삭제하시겠습니까?\n(텍스트 메모는 유지됩니다)')) return;
@@ -608,7 +608,7 @@
         currentImage = canvas.toDataURL('image/jpeg', 0.7);
         imgThumb.src = currentImage;
         imgPreview.classList.remove('hidden');
-        showToast(' 사진이 첨부되었습니다.', 'ok');
+        showToast('📷 사진이 첨부되었습니다.', 'ok');
       };
       img.onerror = () => alert('이미지를 불러올 수 없습니다. 다른 파일로 시도해 주세요.');
       img.src = ev.target.result;
@@ -677,7 +677,7 @@
   }
   function updateBell() {
     const b = $('#tBell');
-    if (b) b.innerHTML = `<span class="ico">${alarmOn ? '🔔' : ''}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
+    if (b) b.innerHTML = `<span class="ico">${alarmOn ? '🔔' : '🔕'}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
   }
   function notify(msg) {
     showToast(msg, 'ok');
@@ -693,7 +693,7 @@
     if (alarmOn) {
       if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
       beep(880, .15);
-      notify('알람이 졌습니다.');
+      notify('알람이 켜졌습니다.');
     } else showToast('알람이 꺼졌습니다.');
   }
   document.addEventListener('click', ensureAudio, { passive: true });
@@ -847,7 +847,7 @@
             if (!modal.classList.contains('hidden') && selectedKey) renderList();
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
-            if (afterCount > beforeCount) notify(' 새 공유 메모가 도착했습니다.');
+            if (afterCount > beforeCount) notify('📢 새 공유 메모가 도착했습니다.');
             else if (afterCount !== beforeCount) showToast('공유 메모가 업데이트되었습니다.', 'ok');
           } else { syncIndicator.textContent = '✓ 계정 동기화 완료'; }
         }
@@ -949,7 +949,7 @@
       const li = document.createElement('li');
       li.innerHTML = `<span class="aid ${id === ADMIN ? 'admin' : ''}">${id === ADMIN ? '👑 ' : ''}${esc(id)}</span>
                       <span class="apw">••••</span>
-                      <button class="eye" title="비밀번호 보기"></button>
+                      <button class="eye" title="비밀번호 보기">👁</button>
                       <button class="mod" title="수정">✏️</button>
                       <button class="del" title="삭제">🗑</button>`;
       const pwEl = li.querySelector('.apw');
@@ -1056,7 +1056,7 @@
     loginBtn.disabled = false;
     loginBtn.textContent = '로그인';
     updateStatus();
-    syncIndicator.textContent = ghReady() ? '🔄 계정 동기화 중...' : '⚙️ 동기화 설정이 필요합니다';
+    syncIndicator.textContent = ghReady() ? '🔄 계정 동기화 중...' : '️ 동기화 설정이 필요합니다';
     pull();
     if (msg) setTimeout(() => alert(msg), 100);
   }
@@ -1145,7 +1145,7 @@
       /* ★ 메인 화면에서도 완료 메모가 아래로 정렬 */
       const list = sortMemos(activeList(key));
       if (list.length) {
-        cell.insertAdjacentHTML('beforeend', `<div class="count"> ${list.length}</div>`);
+        cell.insertAdjacentHTML('beforeend', `<div class="count">📝 ${list.length}</div>`);
         const wrap = document.createElement('div');
         wrap.className = 'memos';
         list.slice(0, showN).forEach(m => {
@@ -1205,13 +1205,13 @@
     
     list.forEach((m, idx) => {
       const li = document.createElement('li');
-      li.className = m.done ? 'done' : '';
+      if (m.done) li.classList.add('done');
       const thumb = m.image ? `<img class="thumb" src="${m.image}" />` : '';
       li.innerHTML = `<button class="move-btn" title="위로">▲</button>
                       <button class="move-btn" title="아래로">▼</button>
-                      <button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : ''}</button>
+                      <button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : '⬜'}</button>
                       <button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
-                      <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : ''}</button>
+                      <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
                       <button class="copy-btn" title="내용 복사">📋</button>
                       ${thumb}
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
@@ -1222,7 +1222,12 @@
       li.querySelector('.move-btn:nth-child(1)').onclick = () => moveMemo(m, -1);
       li.querySelector('.move-btn:nth-child(2)').onclick = () => moveMemo(m, 1);
       
-      li.querySelector('.done-btn').onclick = () => { m.done = !m.done; m.rev = Date.now(); afterChange(); showToast(m.done ? '✅ 작업 완료 처리되었습니다.' : '⬜ 완료 표시가 해제되었습니다.', 'ok'); };
+      li.querySelector('.done-btn').onclick = () => { 
+        m.done = !m.done; 
+        m.rev = Date.now(); 
+        afterChange(); 
+        showToast(m.done ? '✅ 작업 완료 처리되었습니다.' : '⬜ 완료 표시가 해제되었습니다.', 'ok'); 
+      };
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; m.rev = Date.now(); afterChange(); };
       li.querySelector('.lock-btn').onclick = () => { m.private = !m.private; m.rev = Date.now(); afterChange(); };
       li.querySelector('.copy-btn').onclick = () => {
@@ -1252,9 +1257,9 @@
     });
   }
 
-  /* ★ 메모 순서 변경 */
+  /* ★ 메모 순서 변경 - 버그 수정 */
   function moveMemo(memo, direction) {
-    const list = activeList(selectedKey);
+    const list = memos[selectedKey] || [];
     const sortedList = sortMemos(list);
     const sameDoneList = sortedList.filter(x => x.done === memo.done);
     const sameDoneIdx = sameDoneList.findIndex(x => x.id === memo.id);
@@ -1269,6 +1274,7 @@
     memo.order = targetMemo.order;
     targetMemo.order = tempOrder;
     memo.rev = Date.now();
+    targetMemo.rev = Date.now();
     
     afterChange();
     showToast('순서가 변경되었습니다.', 'ok');
@@ -1280,7 +1286,7 @@
     const dayName = DAY_NAMES[new Date(y, mo - 1, d).getDay()];
     const tags = [];
     if (m.important) tags.push('<span class="red">★ 중요</span>');
-    if (m.private) tags.push('<span class="pur"> 개인</span>');
+    if (m.private) tags.push('<span class="pur">🔒 개인</span>');
     if (m.done) tags.push('<span class="grn">✅ 작업 완료</span>');
     if (m.alarm) tags.push(`<span class="yel">⏰ ${m.alarmDays}일 전 ${String(m.alarmHour).padStart(2,'0')}:${String(m.alarmMin).padStart(2,'0')}</span>`);
     if (m.image) tags.push('<span class="grn">📷 사진 첨부</span>');
@@ -1300,7 +1306,7 @@
   function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
-        showToast('📋 복사되었습니다! 카카톡에 붙여넣으세요', 'ok');
+        showToast('📋 복사되었습니다! 카카오에 붙여넣으세요', 'ok');
       }).catch(() => {
         fallbackCopy(text);
       });
@@ -1317,9 +1323,9 @@
     textarea.select();
     try {
       document.execCommand('copy');
-      showToast('📋 복사되었습니다! 카카오톡에 붙여넣으세요', 'ok');
+      showToast('📋 복사되었습니다! 카카오에 붙여넣으세요', 'ok');
     } catch (e) {
-      showToast('복사 실', 'err');
+      showToast('복사 실패', 'err');
     }
     document.body.removeChild(textarea);
   }
@@ -1419,7 +1425,7 @@
       content += '-'.repeat(30) + '\n';
       
       list.forEach(m => {
-        const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? '📷 ' : '');
+        const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? ' ' : '');
         content += `  ${prefix}${m.text}`;
         if (m.time) content += ` (${m.time})`;
         content += '\n';
@@ -1536,7 +1542,7 @@
     const weekKey = weekDates(0)[0].toDateString();
     if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
       localStorage.setItem('wk_mon_' + weekKey, '1');
-      notify(' 주간 메모 정리 (월요일 09:30)');
+      notify('📋 주간 메모 정리 (월요일 09:30)');
       openWeekly(0);
     }
     if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
@@ -1551,7 +1557,7 @@
   updateBell();
   updateStatus();
   if (ghReady()) syncIndicator.textContent = '🔄 계정 동기화 중...';
-  else syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
+  else syncIndicator.textContent = '️ 동기화 설정이 필요합니다';
   pull();
 
   const savedSession = sessionStorage.getItem('session');
