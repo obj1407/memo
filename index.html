@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>캘린더 메모</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>" />
+<!-- Kakao SDK -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h4113v1ej30urx41zfe18i1KdP8xBEp1nQtoQ6V1P5AVGagU6fZ8N1z8" crossorigin="anonymous"></script>
 <style>
   :root{
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
     --border:#242a31; --text:#d7dce2; --dim:#5c6670; --red:#e5484d; --blue:#58a6ff;
-    --green:#3fb950; --purple:#b392f0; --yellow:#ffd166;
+    --green:#3fb950; --purple:#b392f0; --yellow:#ffd166; --kakao:#FEE500;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;}
   html,body{height:100%;}
@@ -65,6 +67,7 @@
   .chk{display:flex;align-items:center;gap:5px;font-size:13px;color:#ff8787;cursor:pointer;user-select:none;}
   .chk.priv{color:var(--purple);}
   .chk.alarm{color:var(--yellow);}
+  .chk.kakao{color:var(--kakao);}
   .chk input{accent-color:currentColor;width:15px;height:15px;cursor:pointer;}
   .input-row button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:9px 16px;cursor:pointer;font-size:13px;align-self:flex-end;}
   #cancelEditBtn{background:#232930;border:1px solid #333a43 !important;color:var(--text) !important;}
@@ -88,9 +91,10 @@
 
   .memo-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;}
   .memo-list li{display:flex;align-items:center;gap:6px;background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px 10px;font-size:13px;}
-  .memo-list li .star-btn,.memo-list li .lock-btn,.memo-list li .done-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
+  .memo-list li .star-btn,.memo-list li .lock-btn,.memo-list li .done-btn,.memo-list li .kakao-btn{background:transparent;border:none;cursor:pointer;font-size:15px;color:#5c6670;padding:0 2px;}
   .memo-list li .star-btn.on{color:var(--red);}
   .memo-list li .lock-btn.on{color:var(--purple);}
+  .memo-list li .kakao-btn.on{color:var(--kakao);}
   .memo-list li .thumb{width:30px;height:30px;border-radius:4px;object-fit:cover;border:1px solid #333a43;cursor:zoom-in;}
   .memo-list li .txt{flex:1;word-break:break-all;}
   .memo-list li .txt.imp{color:#ff8787;}
@@ -102,6 +106,7 @@
   .close-row{margin-top:16px;text-align:right;display:flex;gap:8px;justify-content:flex-end;}
   .close-row button{background:#232930;border:1px solid #333a43;color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;}
   .close-row button.primary{background:var(--green);border-color:var(--green);color:#fff;}
+  .close-row button.kakao{background:var(--kakao);border-color:var(--kakao);color:#000;font-weight:600;}
 
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:30;cursor:zoom-out;}
   .lightbox.hidden{display:none;}
@@ -119,6 +124,7 @@
   .saved-info .meta .pur{color:var(--purple);}
   .saved-info .meta .yel{color:var(--yellow);}
   .saved-info .meta .grn{color:var(--green);}
+  .saved-info .meta .kak{color:var(--kakao);}
   .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;cursor:zoom-in;}
 
   /* 주간 요약: 크기 고정 + 내부 스크롤 */
@@ -143,6 +149,7 @@
             border-radius:8px;padding:12px 14px;cursor:pointer;font-size:13px;text-align:left;}
   .tool-btn:hover{background:#2d343c;}
   .tool-btn .ico{font-size:16px;}
+  .tool-btn.kakao{border-color:var(--kakao);}
 
   .cleanup-box{width:560px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
   .cleanup-box h2{font-size:16px;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
@@ -194,6 +201,7 @@
   .toast.show{opacity:1;}
   .toast.ok{border-color:var(--green);}
   .toast.err{border-color:var(--red);}
+  .toast.kakao{border-color:var(--kakao);}
 
   @media (max-width: 768px) {
     .topbar { padding: 8px 10px; gap: 6px; }
@@ -231,7 +239,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v3.5</b></div>
+      앱 버전 <b>v3.6</b> (카카오톡 연동)</div>
   </div>
 </div>
 
@@ -254,7 +262,7 @@
   <span class="status-left" title="GitHub 동기화 상태">
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
   </span>
-  <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
+  <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기"> -</span>
 </div>
 
 <div class="weekdays">
@@ -278,6 +286,7 @@
       <span class="lbl">시간</span><input type="time" id="timeInput" title="메모 시간(미입력 시 09:00)" />
       <label class="chk"><input type="checkbox" id="impChk" />중요</label>
       <label class="chk priv"><input type="checkbox" id="privChk" />🔒 개인</label>
+      <label class="chk kakao"><input type="checkbox" id="kakaoChk" />💬 카톡</label>
     </div>
     <div class="opt-row">
       <label class="chk alarm"><input type="checkbox" id="alarmDayChk" />하루 전 알람</label>
@@ -291,7 +300,7 @@
     </div>
     <div class="img-preview hidden" id="imgPreview">
       <img id="imgThumb" />
-      <button class="rm" id="imgRemoveBtn" title="사진 삭제">✕</button>
+      <button class="rm" id="imgRemoveBtn" title="사진 삭제"></button>
     </div>
     <ul class="memo-list" id="memoList"></ul>
     <div class="close-row"><button id="closeBtn">닫기</button></div>
@@ -303,7 +312,10 @@
   <div class="saved-box">
     <h2>✅ 메모가 저장되었습니다</h2>
     <div class="saved-info" id="savedInfo"></div>
-    <div class="close-row"><button id="savedCloseBtn">확인</button></div>
+    <div class="close-row">
+      <button id="savedShareBtn" class="kakao">💬 카카오 공유</button>
+      <button id="savedCloseBtn">확인</button>
+    </div>
   </div>
 </div>
 
@@ -324,7 +336,7 @@
 <!-- 계정 관리 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
-    <h2>👥 계정 관리 (관리자 전용)</h2>
+    <h2> 계정 관리 (관리자 전용)</h2>
     <div class="acct-create">
       <input id="newId" placeholder="새 아이디 (영문/숫자 3~20자)" maxlength="20" />
       <input id="newPw" type="password" inputmode="numeric" maxlength="8" placeholder="비밀번호 (숫자 4~8자)" />
@@ -364,6 +376,7 @@
       <button class="tool-btn" id="tPwChange"><span class="ico">🔑</span>비밀번호 변경</button>
       <button class="tool-btn" id="tAcct"><span class="ico">👥</span>계정 관리</button>
       <button class="tool-btn" id="tSync"><span class="ico">⚙️</span>동기화 설정</button>
+      <button class="tool-btn kakao" id="tKakao"><span class="ico">💬</span>카카오톡 설정</button>
       <button class="tool-btn" id="tBell"><span class="ico">🔔</span>알람 켜기/끄기</button>
       <button class="tool-btn" id="tLogout"><span class="ico">🚪</span>로그아웃</button>
     </div>
@@ -384,6 +397,27 @@
   </div>
 </div>
 
+<!-- 카카오톡 설정 -->
+<div class="modal hidden" id="kakaoModal">
+  <div class="modal-box">
+    <h2>💬 카카오톡 연동 설정</h2>
+    <div class="field"><label>Kakao App Key</label><input id="kakaoAppKey" placeholder="카카오 개발자 콘솔에서 발급" /></div>
+    <div class="mini-hint">
+      1. <a href="https://developers.kakao.com" target="_blank" style="color:var(--blue)">카카오 개발자 콘솔</a> 접속<br>
+      2. 앱 만들기 → 앱 키 복사<br>
+      3. 여기에 붙여넣기 → 저장<br><br>
+      <b>기능:</b><br>
+      • 메모를 카카오톡으로 공유<br>
+      • 중요 메모 알림 (알람 설정 시)<br>
+      • 카카오톡 봇 연동 (준비 중)
+    </div>
+    <div class="close-row">
+      <button id="kakaoCloseBtn">닫기</button>
+      <button id="kakaoSaveBtn" class="primary kakao">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 사진 정리 -->
 <div class="modal hidden" id="cleanupModal">
   <div class="cleanup-box">
@@ -398,21 +432,21 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '3.5';
-  console.log('캘린더 메모 v' + APP_VER + ' (GitHub 동기화)');
+  const APP_VER = '3.6';
+  console.log('캘린더 메모 v' + APP_VER + ' (카카오 연동)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
   const loginWrap = $('#loginWrap'), idInput = $('#idInput'),
         pwInput = $('#pwInput'), logoutSel = $('#logoutSel'), loginBtn = $('#loginBtn'),
         syncIndicator = $('#syncIndicator'),
-        toolsModal = $('#toolsModal'), dateModal = $('#dateModal'),
+        toolsModal = $('#toolsModal'), dateModal = $('#dateModal'), kakaoModal = $('#kakaoModal'),
         acctModal = $('#acctModal'), acctList = $('#acctList'),
         newId = $('#newId'), newPw = $('#newPw'),
         importFile = $('#importFile'),
         modal = $('#modal'), modalTitle = $('#modalTitle'),
         memoInput = $('#memoInput'), memoList = $('#memoList'),
-        impChk = $('#impChk'), privChk = $('#privChk'),
+        impChk = $('#impChk'), privChk = $('#privChk'), kakaoChk = $('#kakaoChk'),
         timeInput = $('#timeInput'), alarmDayChk = $('#alarmDayChk'),
         alarmTimeChk = $('#alarmTimeChk'), alarmH = $('#alarmH'), alarmM = $('#alarmM'),
         addBtn = $('#addBtn'), cancelEditBtn = $('#cancelEditBtn'),
@@ -432,7 +466,7 @@
 
   const now = new Date();
   let view = { y: now.getFullYear(), m: now.getMonth() };
-  let selectedKey = null, editingMemo = null;
+  let selectedKey = null, editingMemo = null, lastSavedMemo = null;
   let impList = [], impIdx = 0;
   let currentImage = '';
   const TEAM = 'our-team';
@@ -443,6 +477,9 @@
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Kakao 설정
+  let kakaoConfig = JSON.parse(localStorage.getItem('kakaoConfig') || 'null') || {};
 
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -466,6 +503,14 @@
     toast.className = 'toast show ' + type;
     clearTimeout(toast._t);
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
+  }
+
+  /* ---------- Kakao SDK 초기화 ---------- */
+  function initKakao() {
+    if (kakaoConfig.appKey && window.Kakao && !Kakao.isInitialized()) {
+      Kakao.init(kakaoConfig.appKey);
+      console.log('[Kakao] 초기화 완료');
+    }
   }
 
   /* ---------- 저장소 사용량 ---------- */
@@ -576,11 +621,12 @@
            !weekModal.classList.contains('hidden') || !acctModal.classList.contains('hidden') ||
            !cleanupModal.classList.contains('hidden') || !ghModal.classList.contains('hidden') ||
            !toolsModal.classList.contains('hidden') || !dateModal.classList.contains('hidden') ||
-           !lightbox.classList.contains('hidden');
+           !kakaoModal.classList.contains('hidden') || !lightbox.classList.contains('hidden');
   }
   function closeTopModal() {
     if (!lightbox.classList.contains('hidden')) { lightbox.classList.add('hidden'); lightboxImg.src = ''; }
     else if (!dateModal.classList.contains('hidden')) dateModal.classList.add('hidden');
+    else if (!kakaoModal.classList.contains('hidden')) kakaoModal.classList.add('hidden');
     else if (!cleanupModal.classList.contains('hidden')) { cleanupModal.classList.add('hidden'); cleanupManuallyOpened = true; }
     else if (!toolsModal.classList.contains('hidden')) toolsModal.classList.add('hidden');
     else if (!ghModal.classList.contains('hidden')) ghModal.classList.add('hidden');
@@ -625,13 +671,12 @@
       o.stop(audioCtx.currentTime + dur);
     } catch (e) {}
   }
-  /* ★ 수정: 도구 패널의 알람 버튼에 상태 표시 */
   function updateBell() {
     const b = $('#tBell');
     if (b) b.innerHTML = `<span class="ico">${alarmOn ? '🔔' : '🔕'}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
   }
-  function notify(msg) {
-    showToast(msg, 'ok');
+  function notify(msg, isKakao = false) {
+    showToast(msg, isKakao ? 'kakao' : 'ok');
     if (!alarmOn) return;
     beep(880, .12); setTimeout(() => beep(1174, .18), 140);
     if ('Notification' in window && Notification.permission === 'granted') new Notification('캘린더 메모', { body: msg });
@@ -683,10 +728,10 @@
       const arr = raw[k];
       if (!Array.isArray(arr)) return;
       const list = arr.map(x => typeof x === 'string'
-        ? { id: genId(), rev: 1, text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '', deleted: false, done: false }
+        ? { id: genId(), rev: 1, text: x, important: false, private: false, time: '', alarmDay: false, alarmMin: 0, image: '', deleted: false, done: false, kakao: false }
         : { id: x.id || genId(), rev: x.rev || 1, text: String(x.text || ''), important: !!x.important, private: !!x.private,
             time: x.time || '', alarmDay: !!x.alarmDay, alarmMin: x.alarmMin || ((x.alarmHours || 0) * 60),
-            image: x.image || '', deleted: !!x.deleted, done: !!x.done });
+            image: x.image || '', deleted: !!x.deleted, done: !!x.done, kakao: !!x.kakao });
       if (list.length) out[k] = list;
     });
     return out;
@@ -798,7 +843,7 @@
             if (!modal.classList.contains('hidden') && selectedKey) renderList();
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
-            if (afterCount > beforeCount) notify('📢 새 공유 메모가 도착했습니다.');
+            if (afterCount > beforeCount) notify(' 새 공유 메모가 도착했습니다.');
             else if (afterCount !== beforeCount) showToast('공유 메모가 업데이트되었습니다.', 'ok');
           } else { syncIndicator.textContent = '✓ 계정 동기화 완료'; }
         }
@@ -828,7 +873,7 @@
       } else { lastApplied = state.updated; }
       lastPullOk = Date.now();
       updateStatus();
-    } catch (e) { console.warn('[gh] push 실패:', e); }
+    } catch (e) { console.warn('[gh] push 패:', e); }
     syncing = false;
   }
   setInterval(pull, 10000);
@@ -841,7 +886,7 @@
   ghModal.addEventListener('click', e => { if (e.target === ghModal) ghModal.classList.add('hidden'); });
   $('#ghSaveBtn').onclick = () => {
     const repo = ghRepoInput.value.trim(), token = ghTokenInput.value.trim();
-    if (!repo || !token) return alert('저장소와 토을 모두 입력하세요.');
+    if (!repo || !token) return alert('저장소와 토큰을 모두 입력하세요.');
     ghConfig = { repo, token };
     localStorage.setItem('ghSync', JSON.stringify(ghConfig));
     ghModal.classList.add('hidden');
@@ -887,7 +932,7 @@
         }
         saveLocal(); render(); buildImportant(); push();
         showToast('백업을 가져왔습니다.', 'ok');
-      } catch (err) { alert('가져오기 실패: 올바른 백업 파일이 아닙니다.'); }
+      } catch (err) { alert('가져오기 패: 올바른 백업 파일이 아닙니다.'); }
       importFile.value = '';
     };
     r.readAsText(f);
@@ -993,6 +1038,7 @@
     syncIndicator.textContent = '';
     updateStorage(); render(); buildImportant();
     updateStatus(); push();
+    initKakao();
     lastActivity = Date.now();
   }
   function doLogout(msg) {
@@ -1001,6 +1047,7 @@
     closeModal(); savedModal.classList.add('hidden'); weekModal.classList.add('hidden');
     acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
     toolsModal.classList.add('hidden'); dateModal.classList.add('hidden');
+    kakaoModal.classList.add('hidden');
     cleanupModal.classList.add('hidden'); cleanupManuallyOpened = false;
     loginWrap.style.display = 'flex';
     pwInput.value = '';
@@ -1026,6 +1073,7 @@
   $('#tPwChange').onclick = () => { toolsModal.classList.add('hidden'); changeMyPassword(); };
   $('#tAcct').onclick     = () => { toolsModal.classList.add('hidden'); renderAcctList(); acctModal.classList.remove('hidden'); };
   $('#tSync').onclick     = () => { toolsModal.classList.add('hidden'); openGh(); };
+  $('#tKakao').onclick    = () => { toolsModal.classList.add('hidden'); openKakaoSettings(); };
   $('#tBell').onclick     = () => { toolsModal.classList.add('hidden'); toggleAlarm(); };
   $('#tLogout').onclick   = () => { toolsModal.classList.add('hidden'); doLogout(); };
 
@@ -1040,6 +1088,47 @@
 
   $('#acctCloseBtn').onclick = () => acctModal.classList.add('hidden');
   acctModal.addEventListener('click', e => { if (e.target === acctModal) acctModal.classList.add('hidden'); });
+
+  /* ---------- Kakao 설정 ---------- */
+  function openKakaoSettings() {
+    $('#kakaoAppKey').value = kakaoConfig.appKey || '';
+    kakaoModal.classList.remove('hidden');
+  }
+  $('#kakaoCloseBtn').onclick = () => kakaoModal.classList.add('hidden');
+  kakaoModal.addEventListener('click', e => { if (e.target === kakaoModal) kakaoModal.classList.add('hidden'); });
+  $('#kakaoSaveBtn').onclick = () => {
+    const key = $('#kakaoAppKey').value.trim();
+    if (!key) {
+      kakaoConfig = {};
+      localStorage.removeItem('kakaoConfig');
+    } else {
+      kakaoConfig = { appKey: key };
+      localStorage.setItem('kakaoConfig', JSON.stringify(kakaoConfig));
+      initKakao();
+    }
+    kakaoModal.classList.add('hidden');
+    showToast('💬 카카오톡 설정이 저장되었습니다.', 'kakao');
+  };
+
+  /* ---------- Kakao 공유 ---------- */
+  function shareToKakao(text, date) {
+    if (!kakaoConfig.appKey) {
+      alert('카카오톡 연동이 설정되지 않았습니다.\n도구 → 카카오 설정에서 App Key를 입력하세요.');
+      openKakaoSettings();
+      return;
+    }
+    initKakao();
+    const shareText = `[${date}] ${text}\n\n📅 캘린더 메모`;
+    Kakao.Link.sendDefault({
+      objectType: 'text',
+      text: shareText,
+      link: {
+        mobileWebUrl: window.location.href,
+        webUrl: window.location.href
+      }
+    });
+    showToast('💬 카카톡으로 공유되었습니다.', 'kakao');
+  }
 
   let lastActivity = Date.now();
   ['pointerdown','keydown','touchstart','mousemove'].forEach(ev =>
@@ -1087,13 +1176,13 @@
 
       const list = activeList(key);
       if (list.length) {
-        cell.insertAdjacentHTML('beforeend', `<div class="count">📝 ${list.length}</div>`);
+        cell.insertAdjacentHTML('beforeend', `<div class="count"> ${list.length}</div>`);
         const wrap = document.createElement('div');
         wrap.className = 'memos';
         list.slice(0, showN).forEach(m => {
           const line = document.createElement('div');
-          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
-          line.textContent = (m.done ? '✅ ' : '') + memoLabel(m);
+          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '') + (m.kakao ? ' kak' : '');
+          line.textContent = (m.done ? '✅ ' : '') + (m.kakao ? ' ' : '') + memoLabel(m);
           wrap.appendChild(line);
         });
         if (list.length > showN) {
@@ -1139,7 +1228,7 @@
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
     editingMemo = null; memoInput.value = '';
-    impChk.checked = false; privChk.checked = false;
+    impChk.checked = false; privChk.checked = false; kakaoChk.checked = false;
     timeInput.value = ''; alarmDayChk.checked = false;
     alarmTimeChk.checked = false; alarmH.value = 1; alarmM.value = 0;
     currentImage = ''; imgThumb.src = ''; imgPreview.classList.add('hidden');
@@ -1155,6 +1244,7 @@
       li.innerHTML = `<button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : '⬜'}</button>
                       <button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
                       <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
+                      <button class="kakao-btn ${m.kakao ? 'on' : ''}" title="카카오톡 공유">💬</button>
                       ${thumb}
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
@@ -1162,11 +1252,15 @@
       li.querySelector('.done-btn').onclick = () => { m.done = !m.done; m.rev = Date.now(); afterChange(); showToast(m.done ? '✅ 작업 완료 처리되었습니다.' : '⬜ 완료 표시가 해제되었습니다.', 'ok'); };
       li.querySelector('.star-btn').onclick = () => { m.important = !m.important; m.rev = Date.now(); afterChange(); };
       li.querySelector('.lock-btn').onclick = () => { m.private = !m.private; m.rev = Date.now(); afterChange(); };
+      li.querySelector('.kakao-btn').onclick = () => {
+        const [y, mo, d] = selectedKey.split('-').map(Number);
+        shareToKakao(m.text, `${y}-${mo}-${d}`);
+      };
       const th = li.querySelector('.thumb');
       if (th) th.onclick = () => openLightbox(m.image);
       li.querySelector('.act').onclick = () => {
         editingMemo = m;
-        memoInput.value = m.text; impChk.checked = m.important; privChk.checked = m.private;
+        memoInput.value = m.text; impChk.checked = m.important; privChk.checked = m.private; kakaoChk.checked = m.kakao;
         timeInput.value = m.time || ''; alarmDayChk.checked = !!m.alarmDay;
         if (m.alarmMin > 0) { alarmTimeChk.checked = true; alarmH.value = Math.floor(m.alarmMin / 60); alarmM.value = m.alarmMin % 60; }
         else { alarmTimeChk.checked = false; alarmH.value = 1; alarmM.value = 0; }
@@ -1193,10 +1287,11 @@
     if (m.important) tags.push('<span class="red">★ 중요</span>');
     if (m.private) tags.push('<span class="pur">🔒 개인</span>');
     if (m.done) tags.push('<span class="grn">✅ 작업 완료</span>');
+    if (m.kakao) tags.push('<span class="kak">💬 카톡</span>');
     if (m.time) tags.push(`<span>⏰ ${m.time}</span>`);
-    if (m.alarmDay) tags.push('<span class="yel">⏰ 하루 전 알람</span>');
+    if (m.alarmDay) tags.push('<span class="yel"> 하루 전 알람</span>');
     if (m.alarmMin > 0) tags.push(`<span class="yel">⏰ ${fmtAlarm(m)} 알람</span>`);
-    if (m.image) tags.push('<span>📷 사진 첨부</span>');
+    if (m.image) tags.push('<span> 사진 첨부</span>');
     savedInfo.innerHTML = `
       <div class="date">${y}년 ${mo}월 ${d}일 (${dayName})${hol ? ' · ' + hol : ''}</div>
       <div class="text ${m.done ? 'done-txt' : ''}">${esc(m.text).replace(/\n/g, '<br>')}</div>
@@ -1205,6 +1300,7 @@
     const imgEl = savedInfo.querySelector('img');
     if (imgEl) imgEl.onclick = () => openLightbox(imgEl.src);
     savedModal.classList.remove('hidden');
+    lastSavedMemo = { text: m.text, date: `${y}-${mo}-${d}` };
   }
 
   function addMemo() {
@@ -1214,13 +1310,14 @@
     let saved;
     if (editingMemo) {
       editingMemo.text = t; editingMemo.important = impChk.checked; editingMemo.private = privChk.checked;
+      editingMemo.kakao = kakaoChk.checked;
       editingMemo.time = timeInput.value || ''; editingMemo.alarmDay = alarmDayChk.checked;
       editingMemo.alarmMin = totalMin; editingMemo.image = currentImage || '';
       editingMemo.rev = Date.now();
       saved = editingMemo;
     } else {
       saved = { id: genId(), rev: Date.now(), text: t, important: impChk.checked, private: privChk.checked,
-        time: timeInput.value || '', alarmDay: alarmDayChk.checked, alarmMin: totalMin,
+        kakao: kakaoChk.checked, time: timeInput.value || '', alarmDay: alarmDayChk.checked, alarmMin: totalMin,
         image: currentImage || '', deleted: false, done: false };
       (memos[selectedKey] ||= []).push(saved);
     }
@@ -1240,6 +1337,9 @@
   $('#weekBtn').onclick = () => openWeekly();
   $('#weekCloseBtn').onclick = () => weekModal.classList.add('hidden');
   $('#savedCloseBtn').onclick = () => savedModal.classList.add('hidden');
+  $('#savedShareBtn').onclick = () => {
+    if (lastSavedMemo) shareToKakao(lastSavedMemo.text, lastSavedMemo.date);
+  };
   savedModal.addEventListener('click', e => { if (e.target === savedModal) savedModal.classList.add('hidden'); });
   weekModal.addEventListener('click', e => { if (e.target === weekModal) weekModal.classList.add('hidden'); });
 
@@ -1277,6 +1377,10 @@
           if (at > lastAlarmCheck && at <= nowT) {
             const label = a.type === 'day' ? '하루 전 알람' : `${fmtAlarm(m)} 알람`;
             notify(`⏰ ${label} → ${m.text} (${+mm}/${+dd} ${m.time || '09:00'})`);
+            // Kakao 알림 (중요 + Kakao 체크된 경우)
+            if (m.important && m.kakao && kakaoConfig.appKey) {
+              shareToKakao(`[알람] ${m.text}`, `${+mm}/${+dd}`);
+            }
           }
         });
       });
@@ -1312,7 +1416,7 @@
       list.forEach(m => {
         const li = document.createElement('li');
         li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
-        li.textContent = (m.done ? '✅ ' : '') + memoLabel(m);
+        li.textContent = (m.done ? '✅ ' : '') + (m.kakao ? '💬 ' : '') + memoLabel(m);
         ul.appendChild(li);
       });
       sec.appendChild(ul);
@@ -1348,7 +1452,7 @@
   updateBell();
   updateStatus();
   if (ghReady()) syncIndicator.textContent = '🔄 계정 동기화 중...';
-  else syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
+  else syncIndicator.textContent = '️ 동기화 설정이 필요합니다';
   pull();
 
   const savedSession = sessionStorage.getItem('session');
