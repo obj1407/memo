@@ -15,7 +15,6 @@
   html,body{height:100%;}
   body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:auto;}
 
-  /* ===== 상단바 (간소화) ===== */
   .topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#171b21;border-bottom:1px solid var(--border);flex:0 0 auto;flex-wrap:wrap;}
   .topbar button{background:#232930;border:1px solid var(--border);color:var(--text);padding:7px 13px;border-radius:8px;cursor:pointer;font-size:13px;}
   .topbar button:hover{background:#2d343c;}
@@ -126,7 +125,6 @@
   .saved-info .meta .grn{color:var(--green);}
   .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;cursor:zoom-in;}
 
-  /* 주간 요약: 크기 고정 + 내부 스크롤 */
   .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .week-nav button{background:#232930;border:1px solid #333a43;color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;}
   .week-nav button:hover{background:#2d343c;}
@@ -144,7 +142,6 @@
   .week-export-btn{margin-top:12px;padding:10px;background:var(--green);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;}
   .week-export-btn:hover{background:#45a049;}
 
-  /* 도구 패널 */
   .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
   .tool-btn{display:flex;align-items:center;gap:8px;background:#232930;border:1px solid #333a43;color:var(--text);
             border-radius:8px;padding:12px 14px;cursor:pointer;font-size:13px;text-align:left;}
@@ -195,7 +192,6 @@
   .acct-list li .mod{color:var(--blue);}
   .acct-list li .del{color:var(--red);}
 
-  /* 알람 팝업 - 더 잘 보이게 */
   .alarm-popup{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg, #1b2027, #2d343c);
                border:2px solid var(--orange);border-radius:12px;padding:20px 28px;z-index:100;
                box-shadow:0 10px 40px rgba(240,136,62,.4),0 0 20px rgba(240,136,62,.3);
@@ -258,11 +254,10 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8 자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v4.2</b> (버그 수정)</div>
+      앱 버전 <b>v4.3</b> (순서 변경 버그 수정)</div>
   </div>
 </div>
 
-<!-- ===== 상단바 (간소화) ===== -->
 <div class="topbar">
   <button id="prevBtn">‹</button>
   <span class="month-pill">
@@ -271,12 +266,11 @@
   </span>
   <button id="nextBtn">›</button>
   <button id="todayBtn">오늘</button>
-  <button id="weekBtn"> 주간</button>
+  <button id="weekBtn">📋 주간</button>
   <button id="refreshBtn">🔄</button>
   <button id="toolsBtn">☰ 도구</button>
 </div>
 
-<!-- ===== 상태 바 ===== -->
 <div class="status-bar">
   <span class="status-left" title="GitHub 동기화 상태">
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
@@ -290,7 +284,6 @@
 
 <div class="grid" id="grid"></div>
 
-<!-- 메모 모달 -->
 <div class="modal hidden" id="modal">
   <div class="modal-box">
     <h2 id="modalTitle"></h2>
@@ -332,7 +325,6 @@
   </div>
 </div>
 
-<!-- 저장 완료 팝업 -->
 <div class="modal hidden" id="savedModal">
   <div class="saved-box">
     <h2>✅ 메모가 저장되었습니다</h2>
@@ -344,7 +336,6 @@
   </div>
 </div>
 
-<!-- 주간 요약 (크기 고정) -->
 <div class="modal hidden" id="weekModal">
   <div class="modal-box">
     <h2 id="weekTitle"></h2>
@@ -359,7 +350,6 @@
   </div>
 </div>
 
-<!-- 계정 관리 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
     <h2>👥 계정 관리 (관리자 전용)</h2>
@@ -373,10 +363,9 @@
   </div>
 </div>
 
-<!-- GitHub 동기화 설정 -->
 <div class="modal hidden" id="ghModal">
   <div class="modal-box">
-    <h2>️ GitHub 동기화 설정</h2>
+    <h2>⚙️ GitHub 동기화 설정</h2>
     <div class="field"><label>저장소 (소유자/저장소명)</label><input id="ghRepoInput" placeholder="예: obj03/memo" /></div>
     <div class="field"><label>Personal Access Token (repo 권한)</label><input id="ghTokenInput" type="password" placeholder="ghp_..." /></div>
     <div class="mini-hint">
@@ -391,7 +380,6 @@
   </div>
 </div>
 
-<!-- 도구 패널 -->
 <div class="modal hidden" id="toolsModal">
   <div class="modal-box">
     <h2>🧰 도구</h2>
@@ -410,10 +398,9 @@
 </div>
 <input type="file" id="importFile" accept=".json,application/json" style="display:none" />
 
-<!-- 날짜 이동 -->
 <div class="modal hidden" id="dateModal">
   <div class="modal-box" style="width:340px">
-    <h2> 날짜 이동</h2>
+    <h2>📅 날짜 이동</h2>
     <div class="field"><input type="date" id="dateJump" style="width:100%" /></div>
     <div class="close-row">
       <button id="dateCancelBtn">취소</button>
@@ -422,7 +409,6 @@
   </div>
 </div>
 
-<!-- 사진 정리 -->
 <div class="modal hidden" id="cleanupModal">
   <div class="cleanup-box">
     <h2 id="cleanupTitle">⚠️ 저장소 용량이 부족합니다</h2>
@@ -432,7 +418,6 @@
   </div>
 </div>
 
-<!-- 알람 팝업 -->
 <div class="alarm-popup hidden" id="alarmPopup">
   <div class="icon">⏰</div>
   <div class="title" id="alarmTitle">알람</div>
@@ -445,8 +430,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.2';
-  console.log('캘린더 메모 v' + APP_VER + ' (버그 수정)');
+  const APP_VER = '4.3';
+  console.log('캘린더 메모 v' + APP_VER + ' (순서 변경 버그 수정)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
@@ -740,12 +725,25 @@
     });
     return out;
   }
+
+  /* ★ 순서 값 정규화 (중복 order 값 수정) */
+  function normalizeOrders() {
+    Object.keys(memos).forEach(k => {
+      const arr = memos[k] || [];
+      const notDone = arr.filter(m => !m.done);
+      const done = arr.filter(m => m.done);
+      notDone.forEach((m, i) => { m.order = i; });
+      done.forEach((m, i) => { m.order = i; });
+    });
+  }
+
   function loadLocalCache() {
     let p1 = null, p2 = null;
     try { p1 = JSON.parse(localStorage.getItem(memKey())); } catch (e) {}
     try { p2 = JSON.parse(localStorage.getItem(accKey())); } catch (e) {}
     memos = normalizeMemos(p1);
     accounts = ensureAdmin(p2 || {});
+    normalizeOrders();
   }
   function saveLocal() {
     try {
@@ -762,6 +760,7 @@
       const norm = normalizeMemos(JSON.parse(old));
       if (countAll(norm)) {
         Object.keys(norm).forEach(k => { memos[k] = (memos[k] || []).concat(norm[k]); });
+        normalizeOrders();
         saveLocal();
         showToast('이전 버전의 메모를 복구했습니다.', 'ok');
       }
@@ -934,6 +933,7 @@
             memos[k] = exist.concat(norm[k].filter(m => !ids.has(m.id)));
           });
         }
+        normalizeOrders();
         saveLocal(); render(); buildImportant(); push();
         showToast('백업을 가져왔습니다.', 'ok');
       } catch (err) { alert('가져오기 실패: 올바른 백업 파일이 아닙니다.'); }
@@ -1056,7 +1056,7 @@
     loginBtn.disabled = false;
     loginBtn.textContent = '로그인';
     updateStatus();
-    syncIndicator.textContent = ghReady() ? '🔄 계정 동기화 중...' : '️ 동기화 설정이 필요합니다';
+    syncIndicator.textContent = ghReady() ? '🔄 계정 동기화 중...' : '⚙️ 동기화 설정이 필요합니다';
     pull();
     if (msg) setTimeout(() => alert(msg), 100);
   }
@@ -1109,7 +1109,6 @@
     impIdx = 0;
   }
 
-  /* ★ 메모 정렬 함수 (메인/모달 공용) */
   function sortMemos(list) {
     return [...list].sort((a, b) => {
       if (a.done !== b.done) return a.done ? 1 : -1;
@@ -1142,7 +1141,6 @@
 
       cell.innerHTML = `<div class="day">${d.getDate()}</div>` + (hName ? `<div class="holiday">${hName}</div>` : '');
 
-      /* ★ 메인 화면에서도 완료 메모가 아래로 정렬 */
       const list = sortMemos(activeList(key));
       if (list.length) {
         cell.insertAdjacentHTML('beforeend', `<div class="count">📝 ${list.length}</div>`);
@@ -1218,7 +1216,6 @@
                       <button class="act">수정</button><button class="del">삭제</button>`;
       li.querySelector('.txt').textContent = (m.image ? '📷 ' : '') + memoLabel(m);
       
-      // 순서 변경 버튼
       li.querySelector('.move-btn:nth-child(1)').onclick = () => moveMemo(m, -1);
       li.querySelector('.move-btn:nth-child(2)').onclick = () => moveMemo(m, 1);
       
@@ -1257,25 +1254,23 @@
     });
   }
 
-  /* ★ 메모 순서 변경 - 버그 수정 */
+  /* ★ 메모 순서 변경 - 버그 완전 수정 */
   function moveMemo(memo, direction) {
     const list = memos[selectedKey] || [];
     const sortedList = sortMemos(list);
     const sameDoneList = sortedList.filter(x => x.done === memo.done);
-    const sameDoneIdx = sameDoneList.findIndex(x => x.id === memo.id);
-    
-    if ((direction === -1 && sameDoneIdx === 0) || (direction === 1 && sameDoneIdx === sameDoneList.length - 1)) {
+    const idx = sameDoneList.findIndex(x => x.id === memo.id);
+    const targetIdx = idx + direction;
+    if (idx === -1 || targetIdx < 0 || targetIdx >= sameDoneList.length) {
       showToast('더 이상 이동할 수 없습니다.', 'err');
       return;
     }
-    
-    const targetMemo = sameDoneList[sameDoneIdx + direction];
-    const tempOrder = memo.order;
-    memo.order = targetMemo.order;
-    targetMemo.order = tempOrder;
-    memo.rev = Date.now();
-    targetMemo.rev = Date.now();
-    
+    // 위치 교환
+    const tmp = sameDoneList[idx];
+    sameDoneList[idx] = sameDoneList[targetIdx];
+    sameDoneList[targetIdx] = tmp;
+    // 순서 값 다시 부여 (0,1,2,3...)
+    sameDoneList.forEach((m, i) => { m.order = i; m.rev = Date.now(); });
     afterChange();
     showToast('순서가 변경되었습니다.', 'ok');
   }
@@ -1302,7 +1297,6 @@
     lastSavedMemo = { text: m.text, date: `${y}-${mo}-${d}` };
   }
 
-  /* ---------- 클립보드 복사 ---------- */
   function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
@@ -1323,14 +1317,13 @@
     textarea.select();
     try {
       document.execCommand('copy');
-      showToast('📋 복사되었습니다! 카카오에 붙여넣으세요', 'ok');
+      showToast('📋 복사되었습니다! 카카오톡에 붙여넣으세요', 'ok');
     } catch (e) {
       showToast('복사 실패', 'err');
     }
     document.body.removeChild(textarea);
   }
 
-  /* ---------- 알람 팝업 (10 초) ---------- */
   let alarmPopupTimer = null;
   function showAlarmPopup(title, content, dateStr) {
     alarmTitle.textContent = title;
@@ -1360,7 +1353,6 @@
     const memoDate = new Date(y, mo - 1, d);
     const alarmTime = new Date(memoDate.getFullYear(), memoDate.getMonth(), memoDate.getDate(), +alarmH.value, +alarmM.value, 0);
     
-    // 새 메모의 order 는 현재 목록의 최대 order + 1
     const maxOrder = Math.max(0, ...(activeList(selectedKey).map(m => m.order || 0)));
     
     let saved;
@@ -1408,7 +1400,6 @@
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
 
-  /* ---------- 주간 메모 내보내기 ---------- */
   weekExportBtn.onclick = () => {
     const days = weekDates(weekOffset);
     let content = `주간 메모 (${days[0].getMonth() + 1}/${days[0].getDate()} ~ ${days[6].getMonth() + 1}/${days[6].getDate()})\n`;
@@ -1425,7 +1416,7 @@
       content += '-'.repeat(30) + '\n';
       
       list.forEach(m => {
-        const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? ' ' : '');
+        const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? '📷 ' : '');
         content += `  ${prefix}${m.text}`;
         if (m.time) content += ` (${m.time})`;
         content += '\n';
@@ -1477,7 +1468,6 @@
           const label = m.alarmDays === 0 ? '당일 알람' : `${m.alarmDays}일 전 알람`;
           const timeStr = `${String(m.alarmHour).padStart(2,'0')}:${String(m.alarmMin).padStart(2,'0')}`;
           
-          // 사운드
           if (alarmOn) {
             beep(880, .12); setTimeout(() => beep(1174, .18), 140);
             if ('Notification' in window && Notification.permission === 'granted') {
@@ -1485,7 +1475,6 @@
             }
           }
           
-          // 팝업 (10 초)
           showAlarmPopup(`⏰ ${label}`, m.text, `${y}-${mo}-${d} ${timeStr}`);
         }
       });
@@ -1493,7 +1482,6 @@
     lastAlarmCheck = nowT;
   }
 
-  /* ---------- 주간 요약 (고정 크기 + 스크롤) ---------- */
   let weekOffset = 0;
   function weekDates(offset = 0) {
     const d = new Date();
@@ -1553,11 +1541,10 @@
   }
   setInterval(() => { checkAlarms(); checkWeekly(); }, 5000);
 
-  /* ---------- 시작 ---------- */
   updateBell();
   updateStatus();
   if (ghReady()) syncIndicator.textContent = '🔄 계정 동기화 중...';
-  else syncIndicator.textContent = '️ 동기화 설정이 필요합니다';
+  else syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
   pull();
 
   const savedSession = sessionStorage.getItem('session');
