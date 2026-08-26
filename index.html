@@ -126,6 +126,11 @@
   .saved-info .meta .grn{color:var(--green);}
   .saved-info img{margin-top:10px;max-width:100%;max-height:240px;border-radius:6px;border:1px solid #333a43;display:block;cursor:zoom-in;}
 
+  /* 주간 요약 */
+  .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+  .week-nav button{background:#232930;border:1px solid #333a43;color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;}
+  .week-nav button:hover{background:#2d343c;}
+  .week-nav span{font-size:13px;color:var(--blue);font-weight:600;}
   .week-body{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;}
   .week-day h3{font-size:13px;color:var(--blue);margin-bottom:5px;}
   .week-day h3.sun{color:var(--red);}
@@ -188,18 +193,21 @@
   .toast.ok{border-color:var(--green);}
   .toast.err{border-color:var(--red);}
 
+  /* ★ 모바일: 날짜칸 확대 + 메모 표시 */
   @media (max-width: 768px) {
     .topbar { padding: 8px 10px; gap: 6px; justify-content: center; }
     .share { margin-left: 0; padding-left: 0; border-left: none; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; width: 100%; justify-content: center; }
     .storage { margin-left: 0; padding-left: 0; border-left: none; width: 100%; text-align: center; }
     .ticker { width: 100%; margin-left: 0; margin-top: 8px; flex: auto; }
     .weekdays div { height: 30px; font-size: 12px; }
-    .grid { grid-auto-rows: minmax(80px, 1fr); }
-    .cell { padding: 4px; }
+    .grid { grid-auto-rows: minmax(110px, 1fr); }
+    .cell { padding: 4px 5px; }
     .cell .day { font-size: 13px; }
     .holiday { font-size: 9px; margin-top: 0; }
     .count { font-size: 10px; top: 4px; right: 4px; }
-    .memos { display: none; }
+    .memos { display: flex; margin-top: 3px; gap: 3px; }
+    .memo-line { font-size: 9.5px; padding-left: 4px; }
+    .more { font-size: 9px; padding-left: 4px; }
     .cleanup-item .thumb { width: 55px; height: 55px; }
   }
 </style>
@@ -223,7 +231,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v3.2</b></div>
+      앱 버전 <b>v3.3</b></div>
   </div>
 </div>
 
@@ -233,7 +241,7 @@
   <select id="monthSel"></select><span class="lbl">월</span>
   <button id="nextBtn">›</button>
   <button id="todayBtn">오늘</button>
-  <button id="weekBtn" title="이번 주 메모 요약">📋 주간</button>
+  <button id="weekBtn" title="주간 메모 요약">📋 주간</button>
   <button id="refreshBtn" title="새로고침">🔄</button>
   <button id="exportBtn" title="백업 파일 내보내기">📤</button>
   <button id="importBtn" title="백업 파일 가져오기">📥</button>
@@ -304,6 +312,11 @@
 <div class="modal hidden" id="weekModal">
   <div class="modal-box">
     <h2 id="weekTitle"></h2>
+    <div class="week-nav">
+      <button id="weekPrev">‹ 이전 주</button>
+      <span id="weekRange"></span>
+      <button id="weekNext">다음 주 ›</button>
+    </div>
     <div id="weekBody" class="week-body"></div>
     <div class="close-row"><button id="weekCloseBtn">닫기</button></div>
   </div>
@@ -353,7 +366,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '3.2';
+  const APP_VER = '3.3';
   console.log('캘린더 메모 v' + APP_VER + ' (GitHub 동기화)');
 
   const $ = s => document.querySelector(s);
@@ -379,6 +392,7 @@
         imgThumb = $('#imgThumb'), imgRemoveBtn = $('#imgRemoveBtn'),
         savedModal = $('#savedModal'), savedInfo = $('#savedInfo'),
         weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
+        weekRange = $('#weekRange'), weekPrevBtn = $('#weekPrev'), weekNextBtn = $('#weekNext'),
         cleanupModal = $('#cleanupModal'), cleanupList = $('#cleanupList'),
         cleanupTitle = $('#cleanupTitle'), cleanupDesc = $('#cleanupDesc'),
         lightbox = $('#lightbox'), lightboxImg = $('#lightboxImg'),
@@ -390,7 +404,7 @@
   let selectedKey = null, editingMemo = null;
   let impList = [], impIdx = 0;
   let currentImage = '';
-  const TEAM = 'our-team';   // 단일 공유 공간
+  const TEAM = 'our-team';
   let session = null;
   let accounts = {};
   let memos = {};
@@ -932,7 +946,7 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* ★ 모든 계정: 내 비밀번호 직접 변경 */
+  /* ★ 내 비밀번호 변경 */
   pwChangeBtn.onclick = () => {
     if (!session) return;
     const me = activeAccounts()[session.user];
@@ -1052,6 +1066,7 @@
     const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
     const total = Math.ceil((startOffset + daysInMonth) / 7) * 7;
     const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
+    const showN = isMobile ? 3 : 4;   // ★ 모바일 3줄 / PC 4줄
 
     for (let i = 0; i < total; i++) {
       const d = new Date(view.y, view.m, 1 - startOffset + i);
@@ -1074,16 +1089,16 @@
         cell.insertAdjacentHTML('beforeend', `<div class="count">📝 ${list.length}</div>`);
         const wrap = document.createElement('div');
         wrap.className = 'memos';
-        list.slice(0, 4).forEach(m => {
+        list.slice(0, showN).forEach(m => {
           const line = document.createElement('div');
           line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
           line.textContent = (m.done ? '✅ ' : '') + memoLabel(m);
           wrap.appendChild(line);
         });
-        if (list.length > 4) {
+        if (list.length > showN) {
           const more = document.createElement('div');
           more.className = 'more';
-          more.textContent = `+${list.length - 4} 더 보기`;
+          more.textContent = `+${list.length - showN} 더 보기`;
           wrap.appendChild(more);
         }
         cell.appendChild(wrap);
@@ -1118,7 +1133,7 @@
     modalTitle.textContent = `${y}년 ${m}월 ${d}일 메모` + (h ? ` (${h})` : '');
     resetEdit(); renderList();
     modal.classList.remove('hidden');
-    if (!isMobile) memoInput.focus();   // 모바일은 터치 시에만 키보드
+    if (!isMobile) memoInput.focus();
   }
   function closeModal() { modal.classList.add('hidden'); resetEdit(); }
   function resetEdit() {
@@ -1243,7 +1258,7 @@
     const [y, m] = dateJump.value.split('-').map(Number);
     view = { y, m: m - 1 }; render();
   };
-  $('#weekBtn').onclick = openWeekly;
+  $('#weekBtn').onclick = () => openWeekly();
   $('#weekCloseBtn').onclick = () => weekModal.classList.add('hidden');
   $('#savedCloseBtn').onclick = () => savedModal.classList.add('hidden');
   savedModal.addEventListener('click', e => { if (e.target === savedModal) savedModal.classList.add('hidden'); });
@@ -1291,14 +1306,18 @@
     });
     lastAlarmCheck = nowT;
   }
-  function weekDates() {
+
+  /* ---------- 주간 요약 (이전/다음 주 이동) ---------- */
+  let weekOffset = 0;
+  function weekDates(offset = 0) {
     const d = new Date();
     const dow = (d.getDay() + 6) % 7;
-    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow + offset * 7);
     return [...Array(7)].map((_, i) => { const t = new Date(mon); t.setDate(mon.getDate() + i); return t; });
   }
-  function openWeekly() {
-    const days = weekDates();
+  function openWeekly(offset = weekOffset) {
+    weekOffset = offset;
+    const days = weekDates(weekOffset);
     const todayKey = keyOf(now.getFullYear(), now.getMonth(), now.getDate());
     let total = 0;
     weekBody.innerHTML = '';
@@ -1322,24 +1341,28 @@
       sec.appendChild(ul);
       weekBody.appendChild(sec);
     });
-    if (!total) weekBody.innerHTML = '<div class="empty">이번 주 메모가 없습니다.</div>';
-    weekTitle.textContent = `📋 주간 메모 정리 (${days[0].getMonth() + 1}/${days[0].getDate()} 월 ~ ${days[6].getMonth() + 1}/${days[6].getDate()} 일) · ${total}건`;
+    if (!total) weekBody.innerHTML = '<div class="empty">이 주간의 메모가 없습니다.</div>';
+    weekRange.textContent = `${days[0].getMonth() + 1}.${days[0].getDate()} ~ ${days[6].getMonth() + 1}.${days[6].getDate()}`;
+    weekTitle.textContent = `📋 주간 메모 정리 · ${total}건`;
     weekModal.classList.remove('hidden');
   }
+  weekPrevBtn.onclick = () => openWeekly(weekOffset - 1);
+  weekNextBtn.onclick = () => openWeekly(weekOffset + 1);
+
   function checkWeekly() {
     if (!session) return;
     const d = new Date();
     const hm = d.getHours() * 60 + d.getMinutes();
-    const weekKey = weekDates()[0].toDateString();
+    const weekKey = weekDates(0)[0].toDateString();
     if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
       localStorage.setItem('wk_mon_' + weekKey, '1');
       notify('📋 주간 메모 정리 (월요일 09:30)');
-      openWeekly();
+      openWeekly(0);
     }
     if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
       localStorage.setItem('wk_fri_' + weekKey, '1');
       notify('📋 주간 메모 정리 (금요일 15:30)');
-      openWeekly();
+      openWeekly(0);
     }
   }
   setInterval(() => { checkAlarms(); checkWeekly(); }, 15000);
