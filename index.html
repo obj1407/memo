@@ -51,7 +51,7 @@
              border-left:2px solid #3a414a;padding-left:6px;}
   .memo-line.imp{color:#ff8787;border-left-color:var(--red);}
   .memo-line.priv{color:var(--purple);border-left-color:#7e57c2;}
-  .memo-line.done{text-decoration:line-through;color:#6b7683;}
+  .memo-line.done{text-decoration:line-through;color:#6b7683;opacity:0.6;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;}
@@ -131,7 +131,7 @@
   .week-nav button{background:#232930;border:1px solid #333a43;color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;}
   .week-nav button:hover{background:#2d343c;}
   .week-nav span{font-size:13px;color:var(--blue);font-weight:600;}
-  .week-body{height:50vh;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-right:4px;}
+  .week-body{height:40vh;max-height:40vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin-top:6px;padding-right:4px;}
   .week-day h3{font-size:13px;color:var(--blue);margin-bottom:5px;}
   .week-day h3.sun{color:var(--red);}
   .week-day h3 .today-tag{color:var(--green);font-size:11px;margin-left:6px;}
@@ -140,7 +140,9 @@
   .week-day li{font-size:12.5px;color:#9aa4af;padding-left:8px;border-left:2px solid #3a414a;}
   .week-day li.imp{color:#ff8787;border-left-color:var(--red);}
   .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
-  .week-day li.done{text-decoration:line-through;color:#6b7683;}
+  .week-day li.done{text-decoration:line-through;color:#6b7683;opacity:0.6;}
+  .week-export-btn{margin-top:12px;padding:10px;background:var(--green);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .week-export-btn:hover{background:#45a049;}
 
   /* 도구 패널 */
   .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
@@ -256,7 +258,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">비밀번호는 숫자 4~8 자리 · 🔑 버튼으로 내 비밀번호 변경 가능<br>
-      앱 버전 <b>v4.0</b> (메모 정렬 개선)</div>
+      앱 버전 <b>v4.1</b> (메모 정렬 + 주간 내보내기)</div>
   </div>
 </div>
 
@@ -271,7 +273,7 @@
   <button id="todayBtn">오늘</button>
   <button id="weekBtn">📋 주간</button>
   <button id="refreshBtn">🔄</button>
-  <button id="toolsBtn"> 도구</button>
+  <button id="toolsBtn">☰ 도구</button>
 </div>
 
 <!-- ===== 상태 바 ===== -->
@@ -352,6 +354,7 @@
       <button id="weekNext">다음 주 ›</button>
     </div>
     <div id="weekBody" class="week-body"></div>
+    <button class="week-export-btn" id="weekExportBtn">📤 외부 메모장으로 내보내기</button>
     <div class="close-row"><button id="weekCloseBtn">닫기</button></div>
   </div>
 </div>
@@ -359,7 +362,7 @@
 <!-- 계정 관리 -->
 <div class="modal hidden" id="acctModal">
   <div class="modal-box">
-    <h2>👥 계정 관리 (관리자 전용)</h2>
+    <h2> 계정 관리 (관리자 전용)</h2>
     <div class="acct-create">
       <input id="newId" placeholder="새 아이디 (영문/숫자 3~20 자)" maxlength="20" />
       <input id="newPw" type="password" inputmode="numeric" maxlength="8" placeholder="비밀번호 (숫자 4~8 자)" />
@@ -377,7 +380,7 @@
     <div class="field"><label>저장소 (소유자/저장소명)</label><input id="ghRepoInput" placeholder="예: obj03/memo" /></div>
     <div class="field"><label>Personal Access Token (repo 권한)</label><input id="ghTokenInput" type="password" placeholder="ghp_..." /></div>
     <div class="mini-hint">
-      · 토 발급: GitHub → Settings → Developer settings → Tokens(classic) → <b>repo</b> 체크<br>
+      · 토큰 발급: GitHub → Settings → Developer settings → Tokens(classic) → <b>repo</b> 체크<br>
       · 저장소에 <b>calmemo-data/our-team.json</b> 파일이 자동 생성됩니다<br>
       · 설정은 이 기기 브라우저에만 저장됩니다
     </div>
@@ -399,7 +402,7 @@
       <button class="tool-btn" id="tPwChange"><span class="ico">🔑</span>비밀번호 변경</button>
       <button class="tool-btn" id="tAcct"><span class="ico">👥</span>계정 관리</button>
       <button class="tool-btn" id="tSync"><span class="ico">⚙️</span>동기화 설정</button>
-      <button class="tool-btn" id="tBell"><span class="ico">🔔</span>알람 기/끄기</button>
+      <button class="tool-btn" id="tBell"><span class="ico">🔔</span>알람 켜기/끄기</button>
       <button class="tool-btn" id="tLogout"><span class="ico">🚪</span>로그아웃</button>
     </div>
     <div class="close-row"><button id="toolsCloseBtn">닫기</button></div>
@@ -410,7 +413,7 @@
 <!-- 날짜 이동 -->
 <div class="modal hidden" id="dateModal">
   <div class="modal-box" style="width:340px">
-    <h2>📅 날짜 이동</h2>
+    <h2> 날짜 이동</h2>
     <div class="field"><input type="date" id="dateJump" style="width:100%" /></div>
     <div class="close-row">
       <button id="dateCancelBtn">취소</button>
@@ -442,8 +445,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.0';
-  console.log('캘린더 메모 v' + APP_VER + ' (메모 정렬 개선)');
+  const APP_VER = '4.1';
+  console.log('캘린더 메모 v' + APP_VER + ' (메모 정렬 + 주간 내보내기)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
@@ -468,6 +471,7 @@
         savedModal = $('#savedModal'), savedInfo = $('#savedInfo'),
         weekModal = $('#weekModal'), weekTitle = $('#weekTitle'), weekBody = $('#weekBody'),
         weekRange = $('#weekRange'), weekPrevBtn = $('#weekPrev'), weekNextBtn = $('#weekNext'),
+        weekExportBtn = $('#weekExportBtn'),
         cleanupModal = $('#cleanupModal'), cleanupList = $('#cleanupList'),
         cleanupTitle = $('#cleanupTitle'), cleanupDesc = $('#cleanupDesc'),
         alarmPopup = $('#alarmPopup'), alarmTitle = $('#alarmTitle'),
@@ -568,7 +572,7 @@
           <div class="t">${esc(shortText)}</div>
           <div class="sz">📷 ${sizeStr}</div>
         </div>
-        <button class="del">🗑 삭제</button>`;
+        <button class="del"> 삭제</button>`;
       li.querySelector('.thumb').onclick = () => openLightbox(it.memo.image);
       li.querySelector('.del').onclick = () => {
         if (!confirm('이 사진만 삭제하시겠습니까?\n(텍스트 메모는 유지됩니다)')) return;
@@ -604,7 +608,7 @@
         currentImage = canvas.toDataURL('image/jpeg', 0.7);
         imgThumb.src = currentImage;
         imgPreview.classList.remove('hidden');
-        showToast('📷 사진이 첨부되었습니다.', 'ok');
+        showToast(' 사진이 첨부되었습니다.', 'ok');
       };
       img.onerror = () => alert('이미지를 불러올 수 없습니다. 다른 파일로 시도해 주세요.');
       img.src = ev.target.result;
@@ -673,7 +677,7 @@
   }
   function updateBell() {
     const b = $('#tBell');
-    if (b) b.innerHTML = `<span class="ico">${alarmOn ? '' : '🔕'}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
+    if (b) b.innerHTML = `<span class="ico">${alarmOn ? '🔔' : ''}</span>알람 ${alarmOn ? '끄기' : '켜기'}`;
   }
   function notify(msg) {
     showToast(msg, 'ok');
@@ -689,7 +693,7 @@
     if (alarmOn) {
       if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
       beep(880, .15);
-      notify('알람이 켜졌습니다.');
+      notify('알람이 졌습니다.');
     } else showToast('알람이 꺼졌습니다.');
   }
   document.addEventListener('click', ensureAudio, { passive: true });
@@ -843,14 +847,14 @@
             if (!modal.classList.contains('hidden') && selectedKey) renderList();
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
-            if (afterCount > beforeCount) notify('📢 새 공유 메모가 도착했습니다.');
+            if (afterCount > beforeCount) notify(' 새 공유 메모가 도착했습니다.');
             else if (afterCount !== beforeCount) showToast('공유 메모가 업데이트되었습니다.', 'ok');
           } else { syncIndicator.textContent = '✓ 계정 동기화 완료'; }
         }
       }
       lastPullOk = Date.now();
       updateStatus();
-    } catch (e) { console.warn('[gh] pull 실:', e); }
+    } catch (e) { console.warn('[gh] pull 실패:', e); }
     syncing = false;
   }
   async function push() {
@@ -886,7 +890,7 @@
   ghModal.addEventListener('click', e => { if (e.target === ghModal) ghModal.classList.add('hidden'); });
   $('#ghSaveBtn').onclick = () => {
     const repo = ghRepoInput.value.trim(), token = ghTokenInput.value.trim();
-    if (!repo || !token) return alert('저장소와 큰을 모두 입력하세요.');
+    if (!repo || !token) return alert('저장소와 토큰을 모두 입력하세요.');
     ghConfig = { repo, token };
     localStorage.setItem('ghSync', JSON.stringify(ghConfig));
     ghModal.classList.add('hidden');
@@ -945,8 +949,8 @@
       const li = document.createElement('li');
       li.innerHTML = `<span class="aid ${id === ADMIN ? 'admin' : ''}">${id === ADMIN ? '👑 ' : ''}${esc(id)}</span>
                       <span class="apw">••••</span>
-                      <button class="eye" title="비밀번호 보기">👁</button>
-                      <button class="mod" title="수정">️</button>
+                      <button class="eye" title="비밀번호 보기"></button>
+                      <button class="mod" title="수정">✏️</button>
                       <button class="del" title="삭제">🗑</button>`;
       const pwEl = li.querySelector('.apw');
       li.querySelector('.eye').onclick = () => { pwEl.textContent = pwEl.textContent === '••••' ? accounts[id].pw : '••••'; };
@@ -1009,7 +1013,7 @@
     me.pw = npw.trim();
     me.rev = Date.now();
     saveLocal(); push();
-    showToast(' 비밀번호가 변경되었습니다.', 'ok');
+    showToast('🔑 비밀번호가 변경되었습니다.', 'ok');
   }
 
   /* ---------- 로그인/로그아웃 ---------- */
@@ -1105,6 +1109,14 @@
     impIdx = 0;
   }
 
+  /* ★ 메모 정렬 함수 (메인/모달 공용) */
+  function sortMemos(list) {
+    return [...list].sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (a.order || 0) - (b.order || 0);
+    });
+  }
+
   function render() {
     yearSel.value = view.y; monthSel.value = view.m;
     grid.innerHTML = '';
@@ -1130,9 +1142,10 @@
 
       cell.innerHTML = `<div class="day">${d.getDate()}</div>` + (hName ? `<div class="holiday">${hName}</div>` : '');
 
-      const list = activeList(key);
+      /* ★ 메인 화면에서도 완료 메모가 아래로 정렬 */
+      const list = sortMemos(activeList(key));
       if (list.length) {
-        cell.insertAdjacentHTML('beforeend', `<div class="count">📝 ${list.length}</div>`);
+        cell.insertAdjacentHTML('beforeend', `<div class="count"> ${list.length}</div>`);
         const wrap = document.createElement('div');
         wrap.className = 'memos';
         list.slice(0, showN).forEach(m => {
@@ -1185,14 +1198,6 @@
     addBtn.textContent = '추가'; cancelEditBtn.style.display = 'none';
   }
 
-  /* ★ 메모 정렬: 미완료 (done:false) 가 먼저, 완료 (done:true) 가 나중에 */
-  function sortMemos(list) {
-    return [...list].sort((a, b) => {
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      return (a.order || 0) - (b.order || 0);
-    });
-  }
-
   function renderList() {
     const list = sortMemos(activeList(selectedKey));
     memoList.innerHTML = '';
@@ -1204,9 +1209,9 @@
       const thumb = m.image ? `<img class="thumb" src="${m.image}" />` : '';
       li.innerHTML = `<button class="move-btn" title="위로">▲</button>
                       <button class="move-btn" title="아래로">▼</button>
-                      <button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : '⬜'}</button>
+                      <button class="done-btn" title="작업 완료 토글">${m.done ? '✅' : ''}</button>
                       <button class="star-btn ${m.important ? 'on' : ''}" title="중요 토글">${m.important ? '★' : '☆'}</button>
-                      <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
+                      <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : ''}</button>
                       <button class="copy-btn" title="내용 복사">📋</button>
                       ${thumb}
                       <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
@@ -1250,14 +1255,8 @@
   /* ★ 메모 순서 변경 */
   function moveMemo(memo, direction) {
     const list = activeList(selectedKey);
-    const idx = list.findIndex(x => x.id === memo.id);
-    if (idx === -1) return;
-    
-    const newList = sortMemos(list);
-    const newIdx = newList.findIndex(x => x.id === memo.id);
-    
-    // 같은 done 상태인 메모들만 순서 변경
-    const sameDoneList = newList.filter(x => x.done === memo.done);
+    const sortedList = sortMemos(list);
+    const sameDoneList = sortedList.filter(x => x.done === memo.done);
     const sameDoneIdx = sameDoneList.findIndex(x => x.id === memo.id);
     
     if ((direction === -1 && sameDoneIdx === 0) || (direction === 1 && sameDoneIdx === sameDoneList.length - 1)) {
@@ -1265,7 +1264,6 @@
       return;
     }
     
-    // order 값 교환
     const targetMemo = sameDoneList[sameDoneIdx + direction];
     const tempOrder = memo.order;
     memo.order = targetMemo.order;
@@ -1282,7 +1280,7 @@
     const dayName = DAY_NAMES[new Date(y, mo - 1, d).getDay()];
     const tags = [];
     if (m.important) tags.push('<span class="red">★ 중요</span>');
-    if (m.private) tags.push('<span class="pur">🔒 개인</span>');
+    if (m.private) tags.push('<span class="pur"> 개인</span>');
     if (m.done) tags.push('<span class="grn">✅ 작업 완료</span>');
     if (m.alarm) tags.push(`<span class="yel">⏰ ${m.alarmDays}일 전 ${String(m.alarmHour).padStart(2,'0')}:${String(m.alarmMin).padStart(2,'0')}</span>`);
     if (m.image) tags.push('<span class="grn">📷 사진 첨부</span>');
@@ -1321,7 +1319,7 @@
       document.execCommand('copy');
       showToast('📋 복사되었습니다! 카카오톡에 붙여넣으세요', 'ok');
     } catch (e) {
-      showToast('복사 실패', 'err');
+      showToast('복사 실', 'err');
     }
     document.body.removeChild(textarea);
   }
@@ -1404,6 +1402,53 @@
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
 
+  /* ---------- 주간 메모 내보내기 ---------- */
+  weekExportBtn.onclick = () => {
+    const days = weekDates(weekOffset);
+    let content = `주간 메모 (${days[0].getMonth() + 1}/${days[0].getDate()} ~ ${days[6].getMonth() + 1}/${days[6].getDate()})\n`;
+    content += `생성일: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    content += '='.repeat(50) + '\n\n';
+    
+    days.forEach(t => {
+      const key = keyOf(t.getFullYear(), t.getMonth(), t.getDate());
+      const list = sortMemos(activeList(key));
+      if (!list.length) return;
+      
+      const hol = getHoliday(t.getFullYear(), t.getMonth(), t.getDate());
+      content += `[${t.getMonth() + 1}/${t.getDate()} (${DAY_NAMES[t.getDay()]})${hol ? ' · ' + hol : ''}]\n`;
+      content += '-'.repeat(30) + '\n';
+      
+      list.forEach(m => {
+        const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? '📷 ' : '');
+        content += `  ${prefix}${m.text}`;
+        if (m.time) content += ` (${m.time})`;
+        content += '\n';
+      });
+      content += '\n';
+    });
+    
+    const weekNum = getWeekNumber(days[0]);
+    const filename = `${now.getFullYear()}-W${weekNum}-주간메모.txt`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    
+    showToast('📤 주간 메모가 내보내졌습니다! (다운로드 폴더 확인)', 'ok');
+  };
+
+  function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+
   function getAlarmDateTime(key, m) {
     const [y, mo, d] = key.split('-').map(Number);
     const memoDate = new Date(y, mo - 1, d);
@@ -1458,7 +1503,7 @@
     weekBody.innerHTML = '';
     days.forEach(t => {
       const key = keyOf(t.getFullYear(), t.getMonth(), t.getDate());
-      const list = activeList(key);
+      const list = sortMemos(activeList(key));
       if (!list.length) return;
       total += list.length;
       const hol = getHoliday(t.getFullYear(), t.getMonth(), t.getDate());
@@ -1478,7 +1523,7 @@
     });
     if (!total) weekBody.innerHTML = '<div class="empty">이 주간의 메모가 없습니다.</div>';
     weekRange.textContent = `${days[0].getMonth() + 1}.${days[0].getDate()} ~ ${days[6].getMonth() + 1}.${days[6].getDate()}`;
-    weekTitle.textContent = ` 주간 메모 정리 · ${total}건`;
+    weekTitle.textContent = `📋 주간 메모 정리 · ${total}건`;
     weekModal.classList.remove('hidden');
   }
   weekPrevBtn.onclick = () => openWeekly(weekOffset - 1);
@@ -1491,12 +1536,12 @@
     const weekKey = weekDates(0)[0].toDateString();
     if (d.getDay() === 1 && hm >= 570 && hm < 585 && localStorage.getItem('wk_mon_' + weekKey) !== '1') {
       localStorage.setItem('wk_mon_' + weekKey, '1');
-      notify('📋 주간 메모 정리 (월요일 09:30)');
+      notify(' 주간 메모 정리 (월요일 09:30)');
       openWeekly(0);
     }
     if (d.getDay() === 5 && hm >= 930 && hm < 945 && localStorage.getItem('wk_fri_' + weekKey) !== '1') {
       localStorage.setItem('wk_fri_' + weekKey, '1');
-      notify(' 주간 메모 정리 (금요일 15:30)');
+      notify('📋 주간 메모 정리 (금요일 15:30)');
       openWeekly(0);
     }
   }
