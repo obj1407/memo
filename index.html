@@ -260,7 +260,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.8</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.9</b></div>
   </div>
 </div>
 
@@ -397,7 +397,7 @@
       <button class="tool-btn" id="tAcct"><span class="ico">👥</span>계정 관리</button>
       <button class="tool-btn" id="tSync"><span class="ico">⚙️</span>동기화 설정</button>
       <button class="tool-btn" id="tBell"><span class="ico">🔔</span>알람 켜기/끄기</button>
-      <button class="tool-btn" id="tAlarmTest"><span class="ico"></span>알람 테스트</button>
+      <button class="tool-btn" id="tAlarmTest"><span class="ico">⏰</span>알람 테스트</button>
       <button class="tool-btn" id="tLogout"><span class="ico">🚪</span>로그아웃</button>
     </div>
     <div class="close-row"><button id="toolsCloseBtn">닫기</button></div>
@@ -439,7 +439,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.8';
+  const APP_VER = '4.9';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -856,8 +856,15 @@
             if (!modal.classList.contains('hidden') && selectedKey) renderList();
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
-            if (afterCount > beforeCount) notify('📢 새 공유 메모가 도착했습니다.');
-            else if (afterCount !== beforeCount) showToast('공유 메모가 업데이트되었습니다.', 'ok');
+            if (afterCount > beforeCount) {
+              // ★ 새 공유 메모 도착 → 시간 알람과 동일한 팝업 + 소리
+              if (alarmOn) { beep(880,.12); setTimeout(()=>beep(1174,.18),140); }
+              pushAlarm('📢 새 공유 메모 도착', `${afterCount - beforeCount}개의 새 메모가 도착했습니다.`, new Date().toLocaleTimeString('ko-KR'));
+            } else if (afterCount !== beforeCount) {
+              showToast('공유 메모가 업데이트되었습니다.', 'ok');
+            }
+            // ★ 새로 받은 메모 중 시간이 지난 알람 즉시 확인 (모바일 보장)
+            checkAlarms();
           } else { syncIndicator.textContent = '✓ 계정 동기화 완료'; }
         }
       }
@@ -1053,7 +1060,7 @@
     updateStorage(); render(); buildImportant();
     updateStatus(); push();
     lastActivity = Date.now();
-    checkAlarms();
+    checkAlarms();   // ★ 로그인 직후 놓친 알람 확인
   }
   function doLogout(msg) {
     session = null;
