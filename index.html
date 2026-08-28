@@ -31,6 +31,7 @@
   .storage{font-size:12px;color:var(--dim);cursor:pointer;}
   .storage.mid{color:var(--yellow);}
   .storage.warn{color:var(--red);font-weight:600;}
+  .ver{font-size:11px;color:var(--dim);cursor:default;}
 
   .weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--header-bg);border-bottom:1px solid var(--border);flex:0 0 auto;user-select:none;}
   .weekdays div{height:42px;display:flex;align-items:center;justify-content:center;font-size:14px;}
@@ -195,13 +196,14 @@
   .acct-list li .mod{color:var(--blue);}
   .acct-list li .del{color:var(--red);}
 
-  .alarm-popup{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1b2027,#2d343c);
-               border:2px solid var(--orange);border-radius:10px;padding:12px 16px;z-index:100;
+  /* ★ 알람 팝업 - transform 제거, margin:auto 중앙정렬 (모바일 호환) */
+  .alarm-popup{position:fixed;top:16px;left:0;right:0;margin:0 auto;width:min(340px,86vw);
+               background:linear-gradient(135deg,#1b2027,#2d343c);border:2px solid var(--orange);border-radius:10px;
+               padding:12px 16px;z-index:200;display:flex;align-items:center;gap:10px;
                box-shadow:0 8px 24px rgba(240,136,62,.4),0 0 16px rgba(240,136,62,.25);
-               display:flex;align-items:center;gap:10px;min-width:250px;max-width:86vw;
                animation:slideDown .4s ease-out, pulse 2s ease-in-out infinite;}
   .alarm-popup.hidden{display:none;}
-  @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-16px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+  @keyframes slideDown{from{opacity:0;top:-100px;}to{opacity:1;top:16px;}}
   @keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(240,136,62,.4),0 0 16px rgba(240,136,62,.25);}50%{box-shadow:0 8px 28px rgba(240,136,62,.6),0 0 22px rgba(240,136,62,.45);}}
   .alarm-popup .icon{font-size:26px;animation:shake .5s ease-in-out;flex-shrink:0;}
   @keyframes shake{0%,100%{transform:rotate(0);}25%{transform:rotate(-10deg);}75%{transform:rotate(10deg);}}
@@ -212,8 +214,8 @@
   .alarm-popup .ok-btn{background:var(--orange);border:none;color:#fff;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;}
   .alarm-popup .ok-btn:hover{background:#ff9a4d;}
 
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232930;border:1px solid #444c56;
-         color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;z-index:110;box-shadow:0 6px 20px rgba(0,0,0,.4);
+  .toast{position:fixed;bottom:24px;left:0;right:0;margin:0 auto;width:max-content;max-width:86vw;background:#232930;border:1px solid #444c56;
+         color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;z-index:210;box-shadow:0 6px 20px rgba(0,0,0,.4);
          opacity:0;transition:opacity .3s;pointer-events:none;}
   .toast.show{opacity:1;}
   .toast.ok{border-color:var(--green);}
@@ -233,7 +235,7 @@
     .more { font-size: 9px; padding-left: 4px; }
     .cleanup-item .thumb { width: 55px; height: 55px; }
     .tools-grid { grid-template-columns: 1fr; }
-    .alarm-popup { min-width:230px; padding:10px 12px; gap:8px; }
+    .alarm-popup { padding:10px 12px; gap:8px; }
     .alarm-popup .icon { font-size:22px; }
     .alarm-popup .title { font-size:13px; }
     .alarm-popup .content { font-size:11.5px; }
@@ -260,7 +262,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.9</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.10</b></div>
   </div>
 </div>
 
@@ -281,7 +283,10 @@
   <span class="status-left" title="GitHub 동기화 상태">
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
   </span>
-  <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
+  <span style="display:flex;align-items:center;gap:8px;">
+    <span class="ver">v4.10</span>
+    <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
+  </span>
 </div>
 
 <div class="weekdays">
@@ -439,7 +444,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.9';
+  const APP_VER = '4.10';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -857,13 +862,11 @@
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
             if (afterCount > beforeCount) {
-              // ★ 새 공유 메모 도착 → 시간 알람과 동일한 팝업 + 소리
               if (alarmOn) { beep(880,.12); setTimeout(()=>beep(1174,.18),140); }
               pushAlarm('📢 새 공유 메모 도착', `${afterCount - beforeCount}개의 새 메모가 도착했습니다.`, new Date().toLocaleTimeString('ko-KR'));
             } else if (afterCount !== beforeCount) {
               showToast('공유 메모가 업데이트되었습니다.', 'ok');
             }
-            // ★ 새로 받은 메모 중 시간이 지난 알람 즉시 확인 (모바일 보장)
             checkAlarms();
           } else { syncIndicator.textContent = '✓ 계정 동기화 완료'; }
         }
@@ -1060,7 +1063,7 @@
     updateStorage(); render(); buildImportant();
     updateStatus(); push();
     lastActivity = Date.now();
-    checkAlarms();   // ★ 로그인 직후 놓친 알람 확인
+    checkAlarms();
   }
   function doLogout(msg) {
     session = null;
