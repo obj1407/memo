@@ -53,7 +53,6 @@
   .memo-line.done{text-decoration:line-through;color:#6b7683;opacity:0.6;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
-  /* ★ 수정: 팝업 레이어를 로그인(50)보다 위로 */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:55;}
   .modal.hidden{display:none;}
   .modal-box{width:540px;max-width:92vw;background:#1b2027;border:1px solid #333a43;border-radius:10px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
@@ -255,7 +254,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.4</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.5</b></div>
   </div>
 </div>
 
@@ -370,10 +369,9 @@
     <div class="field"><label>저장소 (소유자/저장소명)</label><input id="ghRepoInput" placeholder="예: obj1407/memo" /></div>
     <div class="field"><label>Personal Access Token (repo 권한)</label><input id="ghTokenInput" type="password" placeholder="ghp_..." /></div>
     <div class="mini-hint">
-      · 팀원 모두 <b>같은 저장소 + 같은 토큰</b>을 입력하면 함께 사용できます<br>
+      · 팀원 모두 <b>같은 저장소 + 같은 토큰</b>을 입력하면 함께 사용 가능합니다<br>
       · 토큰 발급: GitHub → Settings → Developer settings → Tokens(classic) → <b>repo</b> 체크<br>
-      · 저장소에 <b>calmemo-data/our-team.json</b> 파일이 자동 생성됩니다<br>
-      · 설정은 이 기기 브라우저에만 저장됩니다
+      · 저장소에 <b>calmemo-data/our-team.json</b> 파일이 자동 생성됩니다
     </div>
     <div class="close-row">
       <button id="ghCloseBtn">닫기</button>
@@ -432,8 +430,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.4';
-  console.log('캘린더 메모 v' + APP_VER + ' (로그인 전 동기화 설정)');
+  const APP_VER = '4.5';
+  console.log('캘린더 메모 v' + APP_VER + ' (알람 수정)');
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
@@ -649,7 +647,7 @@
   let audioCtx = null;
   function ensureAudio() {
     if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return false; } }
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
     return true;
   }
   function beep(freq, dur) {
@@ -885,7 +883,7 @@
   setInterval(pull, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
 
-  /* ---------- GitHub 설정 (로그인 전에도 가능) ---------- */
+  /* ---------- GitHub 설정 ---------- */
   function openGh() { ghRepoInput.value = ghConfig.repo || ''; ghTokenInput.value = ghConfig.token || ''; ghModal.classList.remove('hidden'); }
   $('#ghOpenBtn1').onclick = openGh;
   $('#ghCloseBtn').onclick = () => ghModal.classList.add('hidden');
@@ -1046,6 +1044,7 @@
     updateStorage(); render(); buildImportant();
     updateStatus(); push();
     lastActivity = Date.now();
+    checkAlarms();   // ★ 로그인 직후 놓친 알람 확인
   }
   function doLogout(msg) {
     session = null;
@@ -1324,6 +1323,7 @@
     document.body.removeChild(textarea);
   }
 
+  /* ---------- 알람 팝업 (10 초) ---------- */
   let alarmPopupTimer = null;
   function showAlarmPopup(title, content, dateStr) {
     alarmTitle.textContent = title;
@@ -1346,13 +1346,49 @@
     }, 1000);
   }
 
+  /* ---------- ★ 알람 체크 (수정됨) ---------- */
+  let firedCache = JSON.parse(localStorage.getItem('firedAlarms') || '{}');
+  function isFired(k){ return !!firedCache[k]; }
+  function markFired(k){ firedCache[k] = Date.now(); try{ localStorage.setItem('firedAlarms', JSON.stringify(firedCache)); }catch(e){} }
+
+  function getAlarmDateTime(key, m) {
+    const [y, mo, d] = key.split('-').map(Number);
+    const memoDate = new Date(y, mo - 1, d);
+    const alarmDate = new Date(memoDate);
+    alarmDate.setDate(alarmDate.getDate() - m.alarmDays);
+    alarmDate.setHours(m.alarmHour, m.alarmMin, 0, 0);
+    return alarmDate;
+  }
+
+  function checkAlarms() {
+    if (!session) return;
+    const nowT = Date.now();
+    Object.entries(memos).forEach(([k, list]) => {
+      (list || []).filter(x => !x.deleted && x.alarm).forEach(m => {
+        const at = getAlarmDateTime(k, m).getTime();
+        const fk = m.id + ':alarm';
+        // 시간이 도래했고, 24 시간 이내이며, 아직 안 울린 알람만 1 회 알림
+        if (at <= nowT && (nowT - at) < 24 * 3600e3 && !isFired(fk)) {
+          markFired(fk);
+          const [y, mo, d] = k.split('-').map(Number);
+          const label = m.alarmDays === 0 ? '당일 알람' : `${m.alarmDays}일 전 알람`;
+          const timeStr = `${String(m.alarmHour).padStart(2,'0')}:${String(m.alarmMin).padStart(2,'0')}`;
+          if (alarmOn) {
+            beep(880, .12); setTimeout(() => beep(1174, .18), 140);
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('캘린더 메모 알람', { body: `${label} - ${m.text}` });
+            }
+          }
+          showAlarmPopup(`⏰ ${label}`, m.text, `${y}-${mo}-${d} ${timeStr}`);
+        }
+      });
+    });
+  }
+
   function addMemo() {
     const t = memoInput.value.trim();
     if (!t) return;
     const [y, mo, d] = selectedKey.split('-').map(Number);
-    const memoDate = new Date(y, mo - 1, d);
-    const alarmTime = new Date(memoDate.getFullYear(), memoDate.getMonth(), memoDate.getDate(), +alarmH.value, +alarmM.value, 0);
-    
     const maxOrder = Math.max(0, ...(activeList(selectedKey).map(m => m.order || 0)));
     
     let saved;
@@ -1444,42 +1480,6 @@
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  }
-
-  function getAlarmDateTime(key, m) {
-    const [y, mo, d] = key.split('-').map(Number);
-    const memoDate = new Date(y, mo - 1, d);
-    const alarmDate = new Date(memoDate);
-    alarmDate.setDate(alarmDate.getDate() - m.alarmDays);
-    alarmDate.setHours(m.alarmHour, m.alarmMin, 0, 0);
-    return alarmDate;
-  }
-  
-  let lastAlarmCheck = Date.now();
-  function checkAlarms() {
-    if (!session) return;
-    const nowT = Date.now();
-    Object.entries(memos).forEach(([k, list]) => {
-      (list || []).filter(x => !x.deleted && x.alarm).forEach(m => {
-        const alarmTime = getAlarmDateTime(k, m);
-        const at = alarmTime.getTime();
-        if (at > lastAlarmCheck && at <= nowT) {
-          const [y, mo, d] = k.split('-').map(Number);
-          const label = m.alarmDays === 0 ? '당일 알람' : `${m.alarmDays}일 전 알람`;
-          const timeStr = `${String(m.alarmHour).padStart(2,'0')}:${String(m.alarmMin).padStart(2,'0')}`;
-          
-          if (alarmOn) {
-            beep(880, .12); setTimeout(() => beep(1174, .18), 140);
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('캘린더 메모 알람', { body: `${label} - ${m.text}` });
-            }
-          }
-          
-          showAlarmPopup(`⏰ ${label}`, m.text, `${y}-${mo}-${d} ${timeStr}`);
-        }
-      });
-    });
-    lastAlarmCheck = nowT;
   }
 
   let weekOffset = 0;
