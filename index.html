@@ -13,7 +13,7 @@
     --bg:#0f1216; --header-bg:#262b33; --cell-bg:#12161b; --cell-hover:#1a1f26;
     --border:#242a31; --text:#d7dce2; --dim:#5c6670; --red:#e5484d; --blue:#58a6ff;
     --green:#3fb950; --purple:#b392f0; --yellow:#ffd166; --orange:#f0883e;
-    --neon:#ff9f1a; /* 형광 주황 */
+    --neon:#ff9f1a;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;}
   html,body{height:100%;}
@@ -51,11 +51,9 @@
   .holiday{color:var(--red);font-size:11px;font-weight:600;margin-top:2px;}
   .count{position:absolute;top:8px;right:10px;font-size:12px;color:var(--blue);}
   .memos{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
-  .memo-line{font-size:11.5px;color:#9aa4af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-             border-left:2px solid #3a414a;padding-left:6px;}
-  .memo-line.imp{color:var(--neon);border-left-color:var(--neon);}
-  .memo-line.priv{color:var(--purple);border-left-color:#7e57c2;}
-  .memo-line.done{text-decoration:line-through;color:#6b7683;opacity:0.6;}
+  .memo-line{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+             border-left:3px solid #3a414a;padding-left:6px;}
+  .memo-line.done{text-decoration:line-through;opacity:0.6;}
   .more{font-size:11px;color:var(--dim);padding-left:6px;margin-top:2px;}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:55;}
@@ -102,9 +100,6 @@
   .memo-list li.done{opacity:0.6;background:#1a1f26;}
   .memo-list li .thumb{width:30px;height:30px;border-radius:4px;object-fit:cover;border:1px solid #333a43;cursor:zoom-in;}
   .memo-list li .txt{flex:1;word-break:break-all;}
-  .memo-list li .txt.imp{color:var(--neon);}
-  .memo-list li .txt.priv{color:var(--purple);}
-  .memo-list li .txt.done{text-decoration:line-through;color:var(--dim);}
   .memo-list li .act{background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:12px;}
   .memo-list li .del{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;}
   .empty{color:var(--dim);font-size:12px;margin-top:12px;text-align:center;}
@@ -140,10 +135,8 @@
   .week-day h3 .today-tag{color:var(--green);font-size:11px;margin-left:6px;}
   .week-day h3 .hol{color:var(--red);font-size:11px;margin-left:6px;}
   .week-day ul{list-style:none;display:flex;flex-direction:column;gap:4px;}
-  .week-day li{font-size:12.5px;color:#9aa4af;padding-left:8px;border-left:2px solid #3a414a;}
-  .week-day li.imp{color:var(--neon);border-left-color:var(--neon);}
-  .week-day li.priv{color:var(--purple);border-left-color:#7e57c2;}
-  .week-day li.done{text-decoration:line-through;color:#6b7683;opacity:0.6;}
+  .week-day li{font-size:12.5px;padding-left:8px;border-left:3px solid #3a414a;}
+  .week-day li.done{text-decoration:line-through;opacity:0.6;}
   .week-export-btn{margin-top:12px;padding:10px;background:var(--green);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;}
   .week-export-btn:hover{background:#45a049;}
 
@@ -196,6 +189,7 @@
   .acct-list li .eye{color:var(--dim);}
   .acct-list li .mod{color:var(--blue);}
   .acct-list li .del{color:var(--red);}
+  .acct-list li .color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
 
   .alarm-popup{position:fixed;top:16px;left:0;right:0;margin:0 auto;width:min(340px,86vw);
                background:linear-gradient(135deg,#1b2027,#2d343c);border:2px solid var(--orange);border-radius:10px;
@@ -267,7 +261,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.11</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.12</b></div>
   </div>
 </div>
 
@@ -289,7 +283,7 @@
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
   </span>
   <span style="display:flex;align-items:center;gap:8px;">
-    <span class="ver">v4.11</span>
+    <span class="ver">v4.12</span>
     <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
   </span>
 </div>
@@ -449,7 +443,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.11';
+  const APP_VER = '4.12';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -497,6 +491,11 @@
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  /* ★ 아이디별 파스텔 색상 */
+  const PALETTE = ['#FFADAD','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF','#F1C0E8','#CFBAFF'];
+  function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h<<5)-h+(s||'').charCodeAt(i); h|=0; } return Math.abs(h); }
+  function userColor(name){ return PALETTE[ hashStr(name||'') % PALETTE.length ]; }
 
   const pad = n => String(n).padStart(2, '0');
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -733,11 +732,11 @@
       if (!Array.isArray(arr)) return;
       const list = arr.map(x => {
         if (typeof x === 'string')
-          return { id: genId(), rev: 1, order: 0, text: x, important: false, private: false, alarm: false, alarmSign: 0, alarmN: 0, alarmUnit: 'day', alarmHour: 9, alarmMin: 0, image: '', deleted: false, done: false };
+          return { id: genId(), rev: 1, order: 0, text: x, important: false, private: false, author: '', alarm: false, alarmSign: 0, alarmN: 0, alarmUnit: 'day', alarmHour: 9, alarmMin: 0, image: '', deleted: false, done: false };
         let sign = x.alarmSign, unit = x.unit || x.alarmUnit || 'day', n = x.alarmN;
         if (sign === undefined) { sign = (x.alarmDays ? -1 : 0); unit = 'day'; n = x.alarmDays || 0; }
         return { id: x.id || genId(), rev: x.rev || 1, order: x.order || 0, text: String(x.text || ''), important: !!x.important, private: !!x.private,
-            alarm: !!x.alarm, alarmSign: sign, alarmN: n || 0, alarmUnit: unit,
+            author: x.author || '', alarm: !!x.alarm, alarmSign: sign, alarmN: n || 0, alarmUnit: unit,
             alarmHour: x.alarmHour ?? 9, alarmMin: x.alarmMin ?? 0,
             image: x.image || '', deleted: !!x.deleted, done: !!x.done };
       });
@@ -968,7 +967,9 @@
     acctList.innerHTML = '';
     Object.keys(activeAccounts()).sort().forEach(id => {
       const li = document.createElement('li');
-      li.innerHTML = `<span class="aid ${id === ADMIN ? 'admin' : ''}">${id === ADMIN ? '👑 ' : ''}${esc(id)}</span>
+      const dot = userColor(id);
+      li.innerHTML = `<span class="color-dot" style="background:${dot}"></span>
+                      <span class="aid ${id === ADMIN ? 'admin' : ''}">${id === ADMIN ? '👑 ' : ''}${esc(id)}</span>
                       <span class="apw">••••</span>
                       <button class="eye" title="비밀번호 보기">👁</button>
                       <button class="mod" title="수정">✏️</button>
@@ -1125,7 +1126,7 @@
   function buildImportant() {
     impList = [];
     Object.keys(memos).sort().forEach(k => {
-      activeList(k).forEach(m => { if (m.important && !m.private) impList.push({ date: k, text: m.text }); });
+      activeList(k).forEach(m => { if (m.important && !m.private) impList.push({ date: k, text: m.text, author: m.author }); });
     });
     impIdx = 0;
   }
@@ -1169,8 +1170,14 @@
         wrap.className = 'memos';
         list.slice(0, showN).forEach(m => {
           const line = document.createElement('div');
-          line.className = 'memo-line' + (m.important ? ' imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
-          line.textContent = (m.done ? '✅ ' : '') + (m.alarm ? '⏰ ' : '') + (m.image ? '📷 ' : '') + memoLabel(m);
+          const ac = userColor(m.author);
+          line.className = 'memo-line' + (m.done ? ' done' : '');
+          line.style.borderLeftColor = ac;
+          if (m.done) line.style.color = '#6b7683';
+          else if (m.important) line.style.color = 'var(--neon)';
+          else if (m.private) line.style.color = 'var(--purple)';
+          else line.style.color = ac;
+          line.textContent = (m.done?'✅ ':(m.important?'★ ':(m.private?'🔒 ':''))) + (m.alarm?'⏰ ':(m.image?'📷 ':'')) + (m.author?`[${m.author}] `:'') + m.text;
           wrap.appendChild(line);
         });
         if (list.length > showN) {
@@ -1223,6 +1230,8 @@
     list.forEach((m, idx) => {
       const li = document.createElement('li');
       if (m.done) li.classList.add('done');
+      const ac = userColor(m.author);
+      li.style.borderLeft = `3px solid ${ac}`;
       const thumb = m.image ? `<img class="thumb" src="${m.image}" />` : '';
       li.innerHTML = `<button class="move-btn" title="위로">▲</button>
                       <button class="move-btn" title="아래로">▼</button>
@@ -1231,9 +1240,14 @@
                       <button class="lock-btn ${m.private ? 'on' : ''}" title="개인 토글">${m.private ? '🔒' : '🔓'}</button>
                       <button class="copy-btn" title="내용 복사">📋</button>
                       ${thumb}
-                      <span class="txt ${m.important ? 'imp' : ''} ${m.private ? 'priv' : ''} ${m.done ? 'done' : ''}"></span>
+                      <span class="txt"></span>
                       <button class="act">수정</button><button class="del">삭제</button>`;
-      li.querySelector('.txt').textContent = (m.image ? '📷 ' : '') + memoLabel(m);
+      const txt = li.querySelector('.txt');
+      txt.textContent = (m.image?'📷 ':(m.author?`[${m.author}] `:'')) + m.text;
+      if (m.done) txt.style.color = '#6b7683';
+      else if (m.important) txt.style.color = 'var(--neon)';
+      else if (m.private) txt.style.color = 'var(--purple)';
+      else txt.style.color = ac;
       
       li.querySelector('.move-btn:nth-child(1)').onclick = () => moveMemo(m, -1);
       li.querySelector('.move-btn:nth-child(2)').onclick = () => moveMemo(m, 1);
@@ -1295,7 +1309,9 @@
     const [y, mo, d] = key.split('-').map(Number);
     const hol = getHoliday(y, mo - 1, d);
     const dayName = DAY_NAMES[new Date(y, mo - 1, d).getDay()];
+    const ac = userColor(m.author);
     const tags = [];
+    if (m.author) tags.push(`<span style="color:${ac}">👤 ${esc(m.author)}</span>`);
     if (m.important) tags.push('<span class="red">★ 중요</span>');
     if (m.private) tags.push('<span class="pur">🔒 개인</span>');
     if (m.done) tags.push('<span class="grn">✅ 작업 완료</span>');
@@ -1412,7 +1428,7 @@
       saved = editingMemo;
     } else {
       saved = { id: genId(), rev: Date.now(), order: maxOrder + 1, text: t, important: impChk.checked, private: privChk.checked,
-        alarm: alarmChk.checked, alarmSign: sign, alarmN: n, alarmUnit: unit, alarmHour: ah, alarmMin: am,
+        author: session ? session.user : '', alarm: alarmChk.checked, alarmSign: sign, alarmN: n, alarmUnit: unit, alarmHour: ah, alarmMin: am,
         image: currentImage || '', deleted: false, done: false };
       (memos[selectedKey] ||= []).push(saved);
     }
@@ -1463,9 +1479,9 @@
       content += '-'.repeat(30) + '\n';
       
       list.forEach(m => {
+        const ac = userColor(m.author);
         const prefix = (m.done ? '✅ ' : '') + (m.important ? '★ ' : '') + (m.image ? '📷 ' : '');
-        content += `  ${prefix}${m.text}`;
-        content += '\n';
+        content += `  ${prefix}[${m.author || '팀'}] ${m.text}\n`;
       });
       content += '\n';
     });
@@ -1518,8 +1534,14 @@
       const ul = document.createElement('ul');
       list.forEach(m => {
         const li = document.createElement('li');
-        li.className = (m.important ? 'imp' : '') + (m.private ? ' priv' : '') + (m.done ? ' done' : '');
-        li.textContent = (m.done ? '✅ ' : '') + (m.alarm ? '⏰ ' : '') + (m.image ? '📷 ' : '') + memoLabel(m);
+        const ac = userColor(m.author);
+        li.className = (m.done ? 'done' : '');
+        li.style.borderLeftColor = ac;
+        if (m.done) li.style.color = '#6b7683';
+        else if (m.important) li.style.color = 'var(--neon)';
+        else if (m.private) li.style.color = 'var(--purple)';
+        else li.style.color = ac;
+        li.textContent = (m.done ? '✅ ' : '') + (m.alarm ? '⏰ ' : '') + (m.image ? '📷 ' : '') + `[${m.author || '팀'}] ` + m.text;
         ul.appendChild(li);
       });
       sec.appendChild(ul);
