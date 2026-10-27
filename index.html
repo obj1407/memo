@@ -35,6 +35,23 @@
   .storage.warn{color:var(--red);font-weight:600;}
   .ver{font-size:11px;color:var(--dim);cursor:default;}
 
+  /* ★ 메인 래퍼: 달력 + 오른쪽 일반메모 패널 */
+  .main-wrap{display:flex;flex:1;min-height:0;}
+  .cal-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .side-panel{width:300px;flex:0 0 300px;border-left:1px solid var(--border);background:var(--panel2);display:flex;flex-direction:column;min-height:0;}
+  .side-panel.closed{display:none;}
+  .side-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;}
+  .side-head button{background:#232930;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 9px;cursor:pointer;font-size:12px;}
+  .side-input{padding:10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+  .side-input textarea{width:100%;min-height:64px;resize:vertical;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px;font-size:13px;outline:none;font-family:inherit;line-height:1.4;}
+  .side-input textarea:focus{border-color:var(--blue);}
+  .side-input button{align-self:flex-end;background:var(--blue);border:none;color:#fff;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px;font-weight:600;}
+  .side-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;}
+  .note-item{background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px;font-size:12.5px;display:flex;gap:6px;align-items:flex-start;}
+  .note-item .ntxt{flex:1;word-break:break-all;white-space:pre-wrap;}
+  .note-item.done .ntxt{text-decoration:line-through;opacity:.6;}
+  .note-item button{background:transparent;border:none;cursor:pointer;font-size:13px;color:#5c6670;padding:0 2px;flex-shrink:0;}
+
   .weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--header-bg);border-bottom:1px solid var(--border);flex:0 0 auto;user-select:none;}
   .weekdays div{height:42px;display:flex;align-items:center;justify-content:center;font-size:14px;}
   .weekdays .sun{color:var(--red);} .weekdays .sat{color:var(--blue);}
@@ -242,6 +259,11 @@
     .alarm-popup .title { font-size:13px; }
     .alarm-popup .content { font-size:11.5px; }
     .alarm-popup .ok-btn { padding:6px 10px; font-size:11px; }
+    /* 모바일: 오른쪽 서랍형 패널 */
+    .side-panel{position:fixed;top:0;right:0;bottom:0;width:85vw;max-width:340px;z-index:45;
+                transform:translateX(100%);transition:transform .25s;display:flex !important;
+                box-shadow:-10px 0 30px rgba(0,0,0,.5);}
+    .side-panel.open{transform:translateX(0);}
   }
 </style>
 </head>
@@ -264,7 +286,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.13</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.14</b></div>
   </div>
 </div>
 
@@ -277,6 +299,7 @@
   <button id="nextBtn">›</button>
   <button id="todayBtn">오늘</button>
   <button id="weekBtn">📋 주간</button>
+  <button id="sideToggle">📝 메모판</button>
   <button id="refreshBtn">🔄</button>
   <button id="toolsBtn">☰ 도구</button>
 </div>
@@ -286,16 +309,29 @@
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
   </span>
   <span style="display:flex;align-items:center;gap:8px;">
-    <span class="ver">v4.13</span>
+    <span class="ver">v4.14</span>
     <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
   </span>
 </div>
 
-<div class="weekdays">
-  <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
-</div>
+<div class="main-wrap">
+  <div class="cal-area">
+    <div class="weekdays">
+      <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
 
-<div class="grid" id="grid"></div>
+  <!-- ★ 오른쪽 일반 메모 패널 -->
+  <aside class="side-panel" id="sidePanel">
+    <div class="side-head"><span>📝 일반 메모</span><button id="sideClose">✕</button></div>
+    <div class="side-input">
+      <textarea id="noteInput" placeholder="날짜와 무관한 자유 메모를 적으세요"></textarea>
+      <button id="noteAddBtn">추가</button>
+    </div>
+    <div class="side-list" id="noteList"></div>
+  </aside>
+</div>
 
 <div class="modal hidden" id="modal">
   <div class="modal-box">
@@ -449,7 +485,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.13';
+  const APP_VER = '4.14';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -482,6 +518,7 @@
         alarmContent = $('#alarmContent'), alarmDate = $('#alarmDate'), alarmOkBtn = $('#alarmOkBtn'),
         lightbox = $('#lightbox'), lightboxImg = $('#lightboxImg'),
         storageInfo = $('#storageInfo'),
+        sidePanel = $('#sidePanel'), noteInput = $('#noteInput'), noteList = $('#noteList'),
         toast = $('#toast');
 
   const now = new Date();
@@ -493,12 +530,12 @@
   let session = null;
   let accounts = {};
   let memos = {};
+  let notes = [];
   let cleanupManuallyOpened = false;
   const ADMIN = 'obj1407';
   const DAY_NAMES = ['일','월','화','수','목','금','토'];
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  /* ★ 아이디별 색상: 선택 색 > 파스텔 자동 */
   const PALETTE = ['#FFADAD','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF','#F1C0E8','#CFBAFF'];
   function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h<<5)-h+(s||'').charCodeAt(i); h|=0; } return Math.abs(h); }
   function userColor(name){
@@ -514,6 +551,7 @@
   const validId = id => /^[a-zA-Z0-9_]{3,20}$/.test(id);
   const memKey = () => 'calMemos_' + TEAM;
   const accKey = () => 'accounts_' + TEAM;
+  const noteKey = () => 'genNotes_' + TEAM;
   const activeList = k => (memos[k] || []).filter(m => !m.deleted);
   const countAll = obj => Object.values(obj || {}).reduce((s, a) => s + (a || []).filter(x => !x.deleted).length, 0);
   const activeAccounts = () => {
@@ -530,7 +568,6 @@
     toast._t = setTimeout(() => { toast.className = 'toast'; }, 2500);
   }
 
-  /* ---------- 투명도 ---------- */
   function setAlpha(v){
     const a = Math.max(.3, Math.min(1, v));
     document.documentElement.style.setProperty('--panel',  `rgba(18,22,27,${a})`);
@@ -761,6 +798,12 @@
     });
     return out;
   }
+  function normalizeNotes(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(x => typeof x === 'string'
+      ? { id: genId(), rev: 1, text: x, done: false, author: '', created: Date.now() }
+      : { id: x.id || genId(), rev: x.rev || 1, text: String(x.text || ''), done: !!x.done, author: x.author || '', created: x.created || Date.now() });
+  }
 
   function normalizeOrders() {
     Object.keys(memos).forEach(k => {
@@ -773,17 +816,20 @@
   }
 
   function loadLocalCache() {
-    let p1 = null, p2 = null;
+    let p1 = null, p2 = null, p3 = null;
     try { p1 = JSON.parse(localStorage.getItem(memKey())); } catch (e) {}
     try { p2 = JSON.parse(localStorage.getItem(accKey())); } catch (e) {}
+    try { p3 = JSON.parse(localStorage.getItem(noteKey())); } catch (e) {}
     memos = normalizeMemos(p1);
     accounts = ensureAdmin(p2 || {});
+    notes = normalizeNotes(p3);
     normalizeOrders();
   }
   function saveLocal() {
     try {
       localStorage.setItem(memKey(), JSON.stringify(memos));
       localStorage.setItem(accKey(), JSON.stringify(accounts));
+      localStorage.setItem(noteKey(), JSON.stringify(notes));
       updateStorage();
     } catch (e) { showToast('로컬 저장 공간이 가득 찼습니다. 사진을 일부 삭제해 주세요.', 'err'); updateStorage(); openCleanup(); }
   }
@@ -835,6 +881,12 @@
     remoteSha = j.content.sha;
     return true;
   }
+  function mergeNotes(local, remote) {
+    const map = {};
+    (local || []).forEach(x => { if (x.id) map[x.id] = x; });
+    (remote || []).forEach(x => { if (x.id && (!map[x.id] || (x.rev || 0) > (map[x.id].rev || 0))) map[x.id] = x; });
+    return Object.values(map);
+  }
   function mergeStates(local, remote) {
     const m = {};
     const dates = new Set([...Object.keys(local.memos || {}), ...Object.keys(remote.memos || {})]);
@@ -851,7 +903,8 @@
       const l = local.accounts?.[id], r = remote.accounts?.[id];
       a[id] = (!l || (r && (r.rev || 0) > (l.rev || 0))) ? (r || l) : l;
     });
-    return { memos: m, accounts: a };
+    const n = mergeNotes(local.notes, remote.notes);
+    return { memos: m, accounts: a, notes: n };
   }
   function stripPrivate(m) {
     const out = {};
@@ -864,20 +917,20 @@
     try {
       const got = await ghGetState();
       if (!got) {
-        const init = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), updated: Date.now(), by: session ? session.user : 'init' };
+        const init = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), notes, updated: Date.now(), by: session ? session.user : 'init' };
         if (await ghPutState(init)) { lastApplied = init.updated; saveLocal(); }
       } else {
         remoteSha = got.sha;
         const ru = got.state.updated || 0;
         if (ru !== lastApplied) {
           const beforeCount = session ? countAll(memos) : 0;
-          const merged = mergeStates({ memos, accounts }, got.state);
-          memos = merged.memos; accounts = ensureAdmin(merged.accounts);
+          const merged = mergeStates({ memos, accounts, notes }, got.state);
+          memos = merged.memos; accounts = ensureAdmin(merged.accounts); notes = merged.notes || [];
           normalizeOrders();
           lastApplied = ru;
           saveLocal();
           if (session) {
-            render(); buildImportant();
+            render(); buildImportant(); renderNotes();
             if (!modal.classList.contains('hidden') && selectedKey) renderList();
             if (!activeAccounts()[session.user]) { syncing = false; doLogout('계정이 삭제되어 로그아웃되었습니다.'); return; }
             const afterCount = countAll(memos);
@@ -900,18 +953,18 @@
     if (!ghReady() || !TEAM || syncing) return;
     syncing = true;
     try {
-      const state = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), updated: Date.now(), by: session ? session.user : 'anon' };
+      const state = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), notes, updated: Date.now(), by: session ? session.user : 'anon' };
       let ok = await ghPutState(state);
       if (!ok) {
         const got = await ghGetState();
         if (got) {
           remoteSha = got.sha;
-          const merged = mergeStates({ memos, accounts }, got.state);
-          memos = merged.memos; accounts = ensureAdmin(merged.accounts);
-          const s2 = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), updated: Date.now(), by: session ? session.user : 'anon' };
+          const merged = mergeStates({ memos, accounts, notes }, got.state);
+          memos = merged.memos; accounts = ensureAdmin(merged.accounts); notes = merged.notes || [];
+          const s2 = { memos: stripPrivate(memos), accounts: ensureAdmin(accounts), notes, updated: Date.now(), by: session ? session.user : 'anon' };
           ok = await ghPutState(s2);
           if (ok) lastApplied = s2.updated;
-          saveLocal(); render(); buildImportant();
+          saveLocal(); render(); buildImportant(); renderNotes();
         }
       } else { lastApplied = state.updated; }
       lastPullOk = Date.now();
@@ -941,7 +994,7 @@
     if (!session) return;
     const active = {};
     Object.keys(memos).forEach(k => { const l = activeList(k); if (l.length) active[k] = l; });
-    const data = { app: 'calendar-memo', team: TEAM, exportedAt: new Date().toISOString(), memos: active };
+    const data = { app: 'calendar-memo', team: TEAM, exportedAt: new Date().toISOString(), memos: active, notes };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -958,21 +1011,26 @@
     r.onload = ev => {
       try {
         let obj = JSON.parse(ev.target.result);
+        const importedNotes = obj && obj.notes ? normalizeNotes(obj.notes) : null;
         if (obj && obj.memos) obj = obj.memos;
         if (typeof obj !== 'object' || Array.isArray(obj)) throw 0;
         const norm = normalizeMemos(obj);
-        if (!countAll(norm)) throw 0;
+        if (!countAll(norm) && !importedNotes) throw 0;
         const overwrite = confirm('확인을 누르면 현재 메모를 [덮어쓰기] 하고,\n취소를 누르면 현재 메모에 [병합] 됩니다.');
-        if (overwrite) memos = norm;
+        if (overwrite) { memos = norm; if (importedNotes) notes = importedNotes; }
         else {
           Object.keys(norm).forEach(k => {
             const exist = memos[k] || [];
             const ids = new Set(exist.map(m => m.id));
             memos[k] = exist.concat(norm[k].filter(m => !ids.has(m.id)));
           });
+          if (importedNotes) {
+            const ids = new Set(notes.map(n => n.id));
+            notes = notes.concat(importedNotes.filter(n => !ids.has(n.id)));
+          }
         }
         normalizeOrders();
-        saveLocal(); render(); buildImportant(); push();
+        saveLocal(); render(); buildImportant(); renderNotes(); push();
         showToast('백업을 가져왔습니다.', 'ok');
       } catch (err) { alert('가져오기 실패: 올바른 백업 파일이 아닙니다.'); }
       importFile.value = '';
@@ -980,7 +1038,6 @@
     r.readAsText(f);
   };
 
-  /* ---------- 계정 관리 (색상 선택 포함) ---------- */
   function renderAcctList() {
     acctList.innerHTML = '';
     Object.keys(activeAccounts()).sort().forEach(id => {
@@ -1031,7 +1088,7 @@
       acctList.appendChild(li);
     });
   }
-  function saveAccountsChange() { saveLocal(); renderAcctList(); push(); render(); }
+  function saveAccountsChange() { saveLocal(); renderAcctList(); push(); render(); renderNotes(); }
   $('#createBtn').onclick = () => {
     const id = newId.value.trim(), pw = newPw.value.trim();
     if (!validId(id)) return alert('아이디는 영문/숫자 3~20 자여야 합니다.');
@@ -1046,7 +1103,6 @@
   newPw.addEventListener('input', () => { newPw.value = newPw.value.replace(/\D/g, ''); });
   pwInput.addEventListener('input', () => { pwInput.value = pwInput.value.replace(/\D/g, ''); });
 
-  /* 내 색상 변경 */
   $('#tMyColor').onclick = () => {
     if (!session) return;
     toolsModal.classList.add('hidden');
@@ -1101,7 +1157,7 @@
     loginWrap.style.display = 'none';
     syncIndicator.textContent = '';
     setAlpha(parseFloat(localStorage.getItem('panelAlpha') || '.92'));
-    updateStorage(); render(); buildImportant();
+    updateStorage(); render(); buildImportant(); renderNotes();
     updateStatus(); push();
     lastActivity = Date.now();
     checkAlarms();
@@ -1113,6 +1169,7 @@
     acctModal.classList.add('hidden'); lightbox.classList.add('hidden');
     toolsModal.classList.add('hidden'); dateModal.classList.add('hidden');
     cleanupModal.classList.add('hidden'); cleanupManuallyOpened = false;
+    sidePanel.classList.remove('open');
     loginWrap.style.display = 'flex';
     pwInput.value = '';
     loginBtn.disabled = false;
@@ -1147,6 +1204,56 @@
   };
   $('#tAlarmTest').onclick = () => { toolsModal.classList.add('hidden'); ensureAudio(); pushAlarm('⏰ 알람 테스트', '알람이 정상 작동합니다!', new Date().toLocaleString('ko-KR')); beep(880,.12); setTimeout(()=>beep(1174,.18),140); };
   $('#tLogout').onclick   = () => { toolsModal.classList.add('hidden'); doLogout(); };
+
+  /* ★ 일반 메모 패널 열기/닫기 */
+  $('#sideToggle').onclick = () => {
+    if (isMobile) sidePanel.classList.toggle('open');
+    else sidePanel.classList.toggle('closed');
+  };
+  $('#sideClose').onclick = () => {
+    if (isMobile) sidePanel.classList.remove('open');
+    else sidePanel.classList.add('closed');
+  };
+
+  /* ★ 일반 메모 렌더/추가 */
+  function renderNotes() {
+    noteList.innerHTML = '';
+    const list = [...notes].sort((a, b) => (a.done?1:0)-(b.done?1:0) || (b.created||0)-(a.created||0));
+    if (!list.length) { noteList.innerHTML = '<div class="empty">적힌 일반 메모가 없습니다.</div>'; return; }
+    list.forEach(n => {
+      const ac = userColor(n.author);
+      const div = document.createElement('div');
+      div.className = 'note-item' + (n.done ? ' done' : '');
+      div.style.borderLeft = `3px solid ${ac}`;
+      div.innerHTML = `<span class="ntxt"></span>
+                       <button class="ndone" title="완료">${n.done ? '✅' : '⬜'}</button>
+                       <button class="ncopy" title="복사">📋</button>
+                       <button class="ndel" title="삭제">🗑</button>`;
+      const t = div.querySelector('.ntxt');
+      t.textContent = (n.author ? `[${n.author}] ` : '') + n.text;
+      if (!n.done) t.style.color = ac;
+      div.querySelector('.ndone').onclick = () => { n.done = !n.done; n.rev = Date.now(); notesChange(); };
+      div.querySelector('.ncopy').onclick = () => copyToClipboard(n.text);
+      div.querySelector('.ndel').onclick = () => {
+        if (!confirm('이 일반 메모를 삭제하시겠습니까?')) return;
+        notes = notes.filter(x => x.id !== n.id);
+        notesChange();
+      };
+      noteList.appendChild(div);
+    });
+  }
+  function notesChange() { saveLocal(); renderNotes(); push(); }
+  $('#noteAddBtn').onclick = () => {
+    const t = noteInput.value.trim();
+    if (!t) return;
+    notes.push({ id: genId(), rev: Date.now(), text: t, done: false, author: session ? session.user : '', created: Date.now() });
+    noteInput.value = '';
+    notesChange();
+    showToast('📝 일반 메모가 추가되었습니다.', 'ok');
+  };
+  noteInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#noteAddBtn').click(); }
+  });
 
   $('#dateCancelBtn').onclick = () => dateModal.classList.add('hidden');
   $('#dateGoBtn').onclick = () => {
@@ -1532,6 +1639,13 @@
       });
       content += '\n';
     });
+
+    if (notes.length) {
+      content += '\n[일반 메모]\n' + '-'.repeat(30) + '\n';
+      notes.forEach(n => {
+        content += `  ${n.done ? '✅ ' : ''}[${n.author || '팀'}] ${n.text}\n`;
+      });
+    }
     
     const weekNum = getWeekNumber(days[0]);
     const filename = `${now.getFullYear()}-W${weekNum}-주간메모.txt`;
