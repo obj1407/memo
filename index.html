@@ -35,7 +35,6 @@
   .storage.warn{color:var(--red);font-weight:600;}
   .ver{font-size:11px;color:var(--dim);cursor:default;}
 
-  /* ★ 메인 래퍼: 달력 + 오른쪽 일반메모 패널 */
   .main-wrap{display:flex;flex:1;min-height:0;}
   .cal-area{flex:1;display:flex;flex-direction:column;min-width:0;}
   .side-panel{width:300px;flex:0 0 300px;border-left:1px solid var(--border);background:var(--panel2);display:flex;flex-direction:column;min-height:0;}
@@ -45,12 +44,19 @@
   .side-input{padding:10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
   .side-input textarea{width:100%;min-height:64px;resize:vertical;background:#12161b;border:1px solid #333a43;border-radius:6px;color:var(--text);padding:8px;font-size:13px;outline:none;font-family:inherit;line-height:1.4;}
   .side-input textarea:focus{border-color:var(--blue);}
-  .side-input button{align-self:flex-end;background:var(--blue);border:none;color:#fff;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px;font-weight:600;}
+  .side-opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .side-opts .chk{font-size:11px;}
+  .side-opts select,.side-opts input[type=number],.side-opts input[type=time]{background:#232930;border:1px solid #333a43;color:var(--text);border-radius:5px;font-size:11px;padding:3px 4px;outline:none;}
+  .side-opts input[type=number]{width:42px;}
+  .side-opts input[type=color]{width:28px;height:24px;border:none;background:none;cursor:pointer;padding:0;}
+  .side-btnrow{display:flex;gap:6px;justify-content:flex-end;}
+  .side-btnrow button{background:var(--blue);border:none;color:#fff;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600;}
+  .side-btnrow button.cancel{background:#232930;border:1px solid #333a43;color:var(--text);}
   .side-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;}
-  .note-item{background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px;font-size:12.5px;display:flex;gap:6px;align-items:flex-start;}
+  .note-item{background:#232930;border:1px solid #333a43;border-radius:6px;padding:8px;font-size:12.5px;display:flex;gap:5px;align-items:flex-start;}
   .note-item .ntxt{flex:1;word-break:break-all;white-space:pre-wrap;}
   .note-item.done .ntxt{text-decoration:line-through;opacity:.6;}
-  .note-item button{background:transparent;border:none;cursor:pointer;font-size:13px;color:#5c6670;padding:0 2px;flex-shrink:0;}
+  .note-item button{background:transparent;border:none;cursor:pointer;font-size:12px;color:#5c6670;padding:0 1px;flex-shrink:0;}
 
   .weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--header-bg);border-bottom:1px solid var(--border);flex:0 0 auto;user-select:none;}
   .weekdays div{height:42px;display:flex;align-items:center;justify-content:center;font-size:14px;}
@@ -259,7 +265,6 @@
     .alarm-popup .title { font-size:13px; }
     .alarm-popup .content { font-size:11.5px; }
     .alarm-popup .ok-btn { padding:6px 10px; font-size:11px; }
-    /* 모바일: 오른쪽 서랍형 패널 */
     .side-panel{position:fixed;top:0;right:0;bottom:0;width:85vw;max-width:340px;z-index:45;
                 transform:translateX(100%);transition:transform .25s;display:flex !important;
                 box-shadow:-10px 0 30px rgba(0,0,0,.5);}
@@ -286,7 +291,7 @@
     <button id="loginBtn">로그인</button>
     <div class="sync-indicator" id="syncIndicator"></div>
     <div class="hint">처음 사용 시 위 <b>⚙️ 동기화 설정</b> 버튼으로 GitHub 정보를 먼저 입력하세요<br>
-      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.14</b></div>
+      비밀번호는 숫자 4~8 자리 · 앱 버전 <b>v4.15</b></div>
   </div>
 </div>
 
@@ -309,7 +314,7 @@
     <span id="shareStatus" class="dot"></span><span>실시간 공유</span>
   </span>
   <span style="display:flex;align-items:center;gap:8px;">
-    <span class="ver">v4.14</span>
+    <span class="ver">v4.15</span>
     <span class="storage" id="storageInfo" title="클릭 시 사진 정리 팝업 열기">💾 -</span>
   </span>
 </div>
@@ -322,12 +327,30 @@
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- ★ 오른쪽 일반 메모 패널 -->
   <aside class="side-panel" id="sidePanel">
     <div class="side-head"><span>📝 일반 메모</span><button id="sideClose">✕</button></div>
     <div class="side-input">
       <textarea id="noteInput" placeholder="날짜와 무관한 자유 메모를 적으세요"></textarea>
-      <button id="noteAddBtn">추가</button>
+      <div class="side-opts">
+        <label class="chk"><input type="checkbox" id="noteImpChk" />중요</label>
+        <label class="chk alarm"><input type="checkbox" id="noteAlarmChk" />알람</label>
+        <select id="noteSignSel">
+          <option value="0">당일</option>
+          <option value="-1">전</option>
+          <option value="1">뒤</option>
+        </select>
+        <input type="number" id="noteN" min="0" max="30" value="1" />
+        <select id="noteUnitSel">
+          <option value="day">일</option>
+          <option value="hour">시간</option>
+        </select>
+        <input type="time" id="noteTimeInput" value="09:00" />
+        <input type="color" id="noteColorInput" title="글자 색상" />
+      </div>
+      <div class="side-btnrow">
+        <button id="noteCancelBtn" class="cancel" style="display:none">취소</button>
+        <button id="noteAddBtn">추가</button>
+      </div>
     </div>
     <div class="side-list" id="noteList"></div>
   </aside>
@@ -485,7 +508,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APP_VER = '4.14';
+  const APP_VER = '4.15';
   console.log('캘린더 메모 v' + APP_VER);
 
   const $ = s => document.querySelector(s);
@@ -519,11 +542,16 @@
         lightbox = $('#lightbox'), lightboxImg = $('#lightboxImg'),
         storageInfo = $('#storageInfo'),
         sidePanel = $('#sidePanel'), noteInput = $('#noteInput'), noteList = $('#noteList'),
+        noteImpChk = $('#noteImpChk'), noteAlarmChk = $('#noteAlarmChk'),
+        noteSignSel = $('#noteSignSel'), noteN = $('#noteN'), noteUnitSel = $('#noteUnitSel'),
+        noteTimeInput = $('#noteTimeInput'), noteColorInput = $('#noteColorInput'),
+        noteAddBtn = $('#noteAddBtn'), noteCancelBtn = $('#noteCancelBtn'),
         toast = $('#toast');
 
   const now = new Date();
   let view = { y: now.getFullYear(), m: now.getMonth() };
   let selectedKey = null, editingMemo = null, lastSavedMemo = null;
+  let editingNote = null;
   let impList = [], impIdx = 0;
   let currentImage = '';
   const TEAM = 'our-team';
@@ -801,8 +829,11 @@
   function normalizeNotes(raw) {
     if (!Array.isArray(raw)) return [];
     return raw.map(x => typeof x === 'string'
-      ? { id: genId(), rev: 1, text: x, done: false, author: '', created: Date.now() }
-      : { id: x.id || genId(), rev: x.rev || 1, text: String(x.text || ''), done: !!x.done, author: x.author || '', created: x.created || Date.now() });
+      ? { id: genId(), rev: 1, text: x, done: false, author: '', created: Date.now(), color: '', important: false, alarm: false, alarmSign: 0, alarmN: 0, alarmUnit: 'day', alarmHour: 9, alarmMin: 0 }
+      : { id: x.id || genId(), rev: x.rev || 1, text: String(x.text || ''), done: !!x.done, author: x.author || '', created: x.created || Date.now(),
+          color: x.color || '', important: !!x.important, alarm: !!x.alarm,
+          alarmSign: x.alarmSign ?? 0, alarmN: x.alarmN || 0, alarmUnit: x.alarmUnit || 'day',
+          alarmHour: x.alarmHour ?? 9, alarmMin: x.alarmMin ?? 0 });
   }
 
   function normalizeOrders() {
@@ -1205,7 +1236,6 @@
   $('#tAlarmTest').onclick = () => { toolsModal.classList.add('hidden'); ensureAudio(); pushAlarm('⏰ 알람 테스트', '알람이 정상 작동합니다!', new Date().toLocaleString('ko-KR')); beep(880,.12); setTimeout(()=>beep(1174,.18),140); };
   $('#tLogout').onclick   = () => { toolsModal.classList.add('hidden'); doLogout(); };
 
-  /* ★ 일반 메모 패널 열기/닫기 */
   $('#sideToggle').onclick = () => {
     if (isMobile) sidePanel.classList.toggle('open');
     else sidePanel.classList.toggle('closed');
@@ -1215,23 +1245,48 @@
     else sidePanel.classList.add('closed');
   };
 
-  /* ★ 일반 메모 렌더/추가 */
+  /* ---------- 일반 메모 ---------- */
+  function resetNoteEdit() {
+    editingNote = null;
+    noteInput.value = '';
+    noteImpChk.checked = false; noteAlarmChk.checked = false;
+    noteSignSel.value = '0'; noteN.value = 1; noteUnitSel.value = 'day';
+    noteTimeInput.value = '09:00';
+    noteColorInput.value = session ? userColor(session.user) : '#d7dce2';
+    noteAddBtn.textContent = '추가';
+    noteCancelBtn.style.display = 'none';
+  }
   function renderNotes() {
     noteList.innerHTML = '';
     const list = [...notes].sort((a, b) => (a.done?1:0)-(b.done?1:0) || (b.created||0)-(a.created||0));
     if (!list.length) { noteList.innerHTML = '<div class="empty">적힌 일반 메모가 없습니다.</div>'; return; }
     list.forEach(n => {
-      const ac = userColor(n.author);
+      const baseColor = n.color || userColor(n.author);
       const div = document.createElement('div');
       div.className = 'note-item' + (n.done ? ' done' : '');
-      div.style.borderLeft = `3px solid ${ac}`;
+      div.style.borderLeft = `3px solid ${baseColor}`;
       div.innerHTML = `<span class="ntxt"></span>
+                       <button class="nedit" title="수정">✏️</button>
                        <button class="ndone" title="완료">${n.done ? '✅' : '⬜'}</button>
                        <button class="ncopy" title="복사">📋</button>
                        <button class="ndel" title="삭제">🗑</button>`;
       const t = div.querySelector('.ntxt');
-      t.textContent = (n.author ? `[${n.author}] ` : '') + n.text;
-      if (!n.done) t.style.color = ac;
+      t.textContent = (n.important ? '★ ' : '') + (n.alarm ? '⏰ ' : '') + (n.author ? `[${n.author}] ` : '') + n.text;
+      if (n.done) t.style.color = '#6b7683';
+      else if (n.important) t.style.color = 'var(--neon)';
+      else t.style.color = baseColor;
+      div.querySelector('.nedit').onclick = () => {
+        editingNote = n;
+        noteInput.value = n.text;
+        noteImpChk.checked = !!n.important; noteAlarmChk.checked = !!n.alarm;
+        noteSignSel.value = String(n.alarmSign ?? 0); noteN.value = n.alarmN || 1; noteUnitSel.value = n.alarmUnit || 'day';
+        noteTimeInput.value = `${String(n.alarmHour ?? 9).padStart(2,'0')}:${String(n.alarmMin ?? 0).padStart(2,'0')}`;
+        noteColorInput.value = n.color || userColor(n.author);
+        noteAddBtn.textContent = '저장';
+        noteCancelBtn.style.display = 'inline-block';
+        noteInput.focus();
+        if (isMobile) sidePanel.classList.add('open');
+      };
       div.querySelector('.ndone').onclick = () => { n.done = !n.done; n.rev = Date.now(); notesChange(); };
       div.querySelector('.ncopy').onclick = () => copyToClipboard(n.text);
       div.querySelector('.ndel').onclick = () => {
@@ -1243,16 +1298,32 @@
     });
   }
   function notesChange() { saveLocal(); renderNotes(); push(); }
-  $('#noteAddBtn').onclick = () => {
+  noteAddBtn.onclick = () => {
     const t = noteInput.value.trim();
     if (!t) return;
-    notes.push({ id: genId(), rev: Date.now(), text: t, done: false, author: session ? session.user : '', created: Date.now() });
-    noteInput.value = '';
+    const [ah, am] = (noteTimeInput.value || '09:00').split(':').map(Number);
+    let sign = +noteSignSel.value, n = +noteN.value, unit = noteUnitSel.value;
+    if (sign === 0) n = 0;
+    if (editingNote) {
+      editingNote.text = t; editingNote.important = noteImpChk.checked; editingNote.alarm = noteAlarmChk.checked;
+      editingNote.alarmSign = sign; editingNote.alarmN = n; editingNote.alarmUnit = unit;
+      editingNote.alarmHour = ah; editingNote.alarmMin = am;
+      editingNote.color = noteColorInput.value;
+      editingNote.rev = Date.now();
+      delete firedCache[editingNote.id + ':notealarm'];
+      showToast('📝 일반 메모가 수정되었습니다.', 'ok');
+    } else {
+      notes.push({ id: genId(), rev: Date.now(), text: t, done: false, author: session ? session.user : '', created: Date.now(),
+        color: noteColorInput.value, important: noteImpChk.checked, alarm: noteAlarmChk.checked,
+        alarmSign: sign, alarmN: n, alarmUnit: unit, alarmHour: ah, alarmMin: am });
+      showToast('📝 일반 메모가 추가되었습니다.', 'ok');
+    }
+    resetNoteEdit();
     notesChange();
-    showToast('📝 일반 메모가 추가되었습니다.', 'ok');
   };
+  noteCancelBtn.onclick = () => resetNoteEdit();
   noteInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#noteAddBtn').click(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); noteAddBtn.click(); }
   });
 
   $('#dateCancelBtn').onclick = () => dateModal.classList.add('hidden');
@@ -1542,6 +1613,14 @@
     const unitKo = m.alarmUnit === 'hour' ? '시간' : '일';
     return `${m.alarmN}${unitKo} ${m.alarmSign > 0 ? '뒤' : '전'}`;
   }
+  function getNoteAlarmDateTime(n) {
+    const base = new Date(n.created || Date.now());
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate(), n.alarmHour ?? 9, n.alarmMin ?? 0);
+    const sign = n.alarmSign ?? 0;
+    if (sign === 0) return d;
+    const delta = (n.alarmN || 0) * (n.alarmUnit === 'hour' ? 3600000 : 86400000);
+    return new Date(d.getTime() + sign * delta);
+  }
 
   function checkAlarms() {
     if (!session) return;
@@ -1562,6 +1641,21 @@
           pushAlarm(`⏰ ${alarmLabel(m)}`, m.text, `${y}-${mo}-${d}`);
         }
       });
+    });
+    // ★ 일반 메모 알람
+    (notes || []).filter(n => !n.done && n.alarm).forEach(n => {
+      const at = getNoteAlarmDateTime(n).getTime();
+      const fk = n.id + ':notealarm';
+      if (at <= nowT && !isFired(fk)) {
+        markFired(fk);
+        if (alarmOn) {
+          beep(880, .12); setTimeout(() => beep(1174, .18), 140);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('캘린더 메모 알람', { body: `${alarmLabel(n)} - ${n.text}` });
+          }
+        }
+        pushAlarm(`⏰ ${alarmLabel(n)} (일반메모)`, n.text, new Date(n.created).toLocaleDateString('ko-KR'));
+      }
     });
   }
 
@@ -1643,7 +1737,7 @@
     if (notes.length) {
       content += '\n[일반 메모]\n' + '-'.repeat(30) + '\n';
       notes.forEach(n => {
-        content += `  ${n.done ? '✅ ' : ''}[${n.author || '팀'}] ${n.text}\n`;
+        content += `  ${n.done ? '✅ ' : ''}${n.important ? '★ ' : ''}[${n.author || '팀'}] ${n.text}\n`;
       });
     }
     
@@ -1708,6 +1802,26 @@
       sec.appendChild(ul);
       weekBody.appendChild(sec);
     });
+    if (notes.length) {
+      const sec = document.createElement('div');
+      sec.className = 'week-day';
+      sec.innerHTML = `<h3>📝 일반 메모</h3>`;
+      const ul = document.createElement('ul');
+      notes.forEach(n => {
+        const li = document.createElement('li');
+        const bc = n.color || userColor(n.author);
+        li.className = (n.done ? 'done' : '');
+        li.style.borderLeftColor = bc;
+        if (n.done) li.style.color = '#6b7683';
+        else if (n.important) li.style.color = 'var(--neon)';
+        else li.style.color = bc;
+        li.textContent = (n.done ? '✅ ' : '') + (n.important ? '★ ' : '') + (n.alarm ? '⏰ ' : '') + `[${n.author || '팀'}] ` + n.text;
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+      weekBody.appendChild(sec);
+      total += notes.length;
+    }
     if (!total) weekBody.innerHTML = '<div class="empty">이 주간의 메모가 없습니다.</div>';
     weekRange.textContent = `${days[0].getMonth() + 1}.${days[0].getDate()} ~ ${days[6].getMonth() + 1}.${days[6].getDate()}`;
     weekTitle.textContent = `📋 주간 메모 정리 · ${total}건`;
@@ -1739,6 +1853,7 @@
   updateStatus();
   if (ghReady()) syncIndicator.textContent = '🔄 계정 동기화 중...';
   else syncIndicator.textContent = '⚙️ 동기화 설정이 필요합니다';
+  noteColorInput.value = '#d7dce2';
   pull();
 
   const savedSession = sessionStorage.getItem('session');
